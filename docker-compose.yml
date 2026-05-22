@@ -3,7 +3,7 @@
 x-airflow-common:
   ## Local
   # build:
-  #   context: ./camair-etl
+  #   context: ./projects/camair/etl
   #   dockerfile: ./docker/Dockerfile
   # image: camair-airflow:2.8.1-custom
 
@@ -17,11 +17,11 @@ x-airflow-common:
     AIRFLOW_UID: 50000
     PYTHONPATH: /opt/airflow
   volumes:
-    - ./camair-etl/dags:/opt/airflow/dags
-    - ./camair-etl/logs:/opt/airflow/logs
-    - ./camair-etl/data:/opt/airflow/data
-    - ./camair-etl/src:/opt/airflow/src
-    - ./camair-etl/config:/opt/airflow/config
+    - ./projects/camair/etl/dags:/opt/airflow/dags
+    - ./projects/camair/etl/logs:/opt/airflow/logs
+    - ./projects/camair/etl/data:/opt/airflow/data
+    - ./projects/camair/etl/src:/opt/airflow/src
+    - ./projects/camair/etl/config:/opt/airflow/config
   depends_on:
     - postgres
 
@@ -41,7 +41,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres-db:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d
+      - ./projects/camair/postgres-init:/docker-entrypoint-initdb.d
     healthcheck:
       test: [ "CMD", "pg_isready", "-U", "airflow" ]
       interval: 5s
@@ -100,7 +100,7 @@ services:
   # -----------------------------
   # api:
   #   build:
-  #     context: ./api
+  #   context: ./projects/camair/api
   #     dockerfile: Dockerfile
   #   container_name: camair-api
   #   ports:
@@ -194,8 +194,8 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./camair-etl/src/elt/spark:/opt/app/spark
-      - ./camair-etl/data:/opt/spark/data
+      - ./projects/camair/etl/src/elt/spark:/opt/app/spark
+      - ./projects/camair/etl/data:/opt/spark/data
     restart: on-failure
 
 volumes:

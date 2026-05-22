@@ -125,7 +125,7 @@ To "get the data" (meaning to read or use it), you have three main ways dependin
    1 import pandas as pd
    2
    3 # Once the volume is working or you've used 'docker cp'
-   4 df = pd.read_parquet('./camair-etl/data/processed_air_quality')
+   4 df = pd.read_parquet('./projects/camair/etl/data/processed_air_quality')
    5 print(df.head())
   Note: You might need to install pip install pandas pyarrow first.
 
