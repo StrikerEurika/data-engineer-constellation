@@ -1,0 +1,12 @@
+# Ignore non-DAG files for Airflow to speed up parsing
+plugins/
+include/
+tests/
+config/
+docker/
+src/
+data/
+logs/
+.venv/
+.git/
+.*
