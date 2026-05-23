@@ -1,0 +1,10 @@
+[project]
+name = "my-project"
+version = "0.1.0"
+description = "TODO: describe your project"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
