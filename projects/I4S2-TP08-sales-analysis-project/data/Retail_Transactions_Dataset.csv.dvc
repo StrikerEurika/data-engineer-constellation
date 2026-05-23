@@ -1,0 +1,5 @@
+outs:
+- md5: 106bd863d4363b3a189dfc10662ad7ca
+  size: 169434567
+  hash: md5
+  path: Retail_Transactions_Dataset.csv
