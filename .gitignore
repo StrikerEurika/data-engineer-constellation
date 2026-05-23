@@ -25,3 +25,6 @@ dist/
 # data/
 *.csv
 logs/
+
+
+reports/
