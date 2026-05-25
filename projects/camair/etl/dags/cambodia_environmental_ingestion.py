@@ -12,7 +12,7 @@ with DAG(
     'cambodia_environmental_ingestion', # DAG identity name
     default_args=DEFAULT_DAG_ARGS,
     description='Fetch air quality, weather, and UV data from Cambodia MEF API',
-    schedule_interval=timedelta(hours=1),
+    schedule_interval=timedelta(minutes=15),
     catchup=False,
 ) as dag:
     ingest_air_quality = PythonOperator(
