@@ -45,12 +45,12 @@ export default function AirQuality() {
 
   useEffect(() => {
     loadData();
-    const unsubscribe = realTimeService.subscribe((updated) => {
-      setData(updated);
+    const unsubscribe = realTimeService.subscribe("air_quality", (updated) => {
+      setData(updated as AirQualityRecord[]);
       setSelectedProvince((prev) => {
-        if (prev && updated.some((r) => r.name === prev)) return prev;
-        const phnomPenh = updated.find((r) => r.name === "Phnom Penh");
-        return phnomPenh ? "Phnom Penh" : updated[0]?.name ?? null;
+        if (prev && (updated as AirQualityRecord[]).some((r) => r.name === prev)) return prev;
+        const phnomPenh = (updated as AirQualityRecord[]).find((r) => r.name === "Phnom Penh");
+        return phnomPenh ? "Phnom Penh" : (updated as AirQualityRecord[])[0]?.name ?? null;
       });
     });
     return unsubscribe;
