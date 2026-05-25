@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 
 # Airflow Defaults
@@ -16,8 +17,13 @@ AIR_QUALITY_API_URL = "https://data.mef.gov.kh/api/v1/realtime-api/aqi"
 WEATHER_API_URL = "https://data.mef.gov.kh/api/v1/realtime-api/weather"
 UV_API_URL = "https://data.mef.gov.kh/api/v1/realtime-api/uv"
 
-# kafka
-KAFKA_BOOTSTRAP_SERVERS = ['kafka:29092']
+# kafka — override via env var for local dev (e.g. localhost:9092)
+KAFKA_BOOTSTRAP_SERVERS = os.getenv(
+    "KAFKA_BOOTSTRAP_SERVERS", "kafka:29092"
+).split(",")
 KAFKA_TOPIC_AIR_QUALITY = 'raw_air_quality'
 KAFKA_TOPIC_WEATHER = 'raw_weather'
 KAFKA_TOPIC_UV = 'raw_uv'
+
+# Output directory for local (no-Kafka) mode
+LOCAL_OUTPUT_DIR = os.getenv("ETL_OUTPUT_DIR", "data/raw")

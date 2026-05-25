@@ -4,7 +4,7 @@ x-airflow-common:
   ## Local
   # build:
   #   context: ./etl
-  #   dockerfile: ./docker/Dockerfile
+  #   dockerfile: ./docker/Dockerfile.airflow
   # image: camair-airflow:2.8.1-custom
 
   ## Remote
@@ -31,7 +31,7 @@ services:
   # 1. POSTGRES DATABASE (AIRFLOW BACKEND)
   # -----------------------------
   postgres:
-    image: postgis/postgis:13-3.4
+    image: postgis/postgis:13-3.4     # Use PostGIS image for spatial data support
     container_name: postgres
     environment:
       POSTGRES_USER: airflow
@@ -256,6 +256,22 @@ services:
       - ./etl/src/elt/spark:/opt/app/spark
       - ./etl/data:/opt/spark/data
     restart: on-failure
+
+  # -----------------------------
+  # 11. CONTINUOUS KAFKA INGESTOR (replaces hourly Airflow DAG)
+  # -----------------------------
+  ingestor:
+    build:
+      context: ./etl
+      dockerfile: docker/Dockerfile.ingestor
+    container_name: camair-ingestor
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      POLL_INTERVAL_SECONDS: "30"
+    depends_on:
+      kafka:
+        condition: service_started
+    restart: unless-stopped
 
 volumes:
   postgres-db:

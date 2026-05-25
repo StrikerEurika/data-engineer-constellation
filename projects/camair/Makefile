@@ -1,4 +1,6 @@
-.PHONY: db-up db-down db-reset seed api-run api-dev lint
+.PHONY: db-up db-down db-reset seed api-run api-dev etl-fetch etl-fetch-kafka lint
+
+# ── Database ─────────────────────────────────────────────────────────────────
 
 # Start PostgreSQL + PostGIS in Docker (headless)
 db-up:
@@ -18,6 +20,8 @@ db-reset: db-down
 seed:
 	uv run python scripts/seed_provinces.py
 
+# ── API ──────────────────────────────────────────────────────────────────────
+
 # Run the FastAPI app (production mode)
 api-run:
 	uv run uvicorn main:app --host 0.0.0.0 --port 8000 --app-dir api
@@ -26,6 +30,21 @@ api-run:
 api-dev:
 	uv run uvicorn main:app --reload --host 0.0.0.0 --port 8000 --app-dir api
 
-# Lint all Python files in the project
+# ── ETL ──────────────────────────────────────────────────────────────────────
+
+# Install ETL dependencies (first time)
+etl-install:
+	cd etl && uv sync
+
+# Fetch all 3 datasets from MEF API and save to data/raw/ as JSON (no Kafka)
+etl-fetch:
+	cd etl && uv run python -m src.elt.extractors
+
+# Fetch and push to Kafka (requires Kafka running on localhost:9092)
+etl-fetch-kafka:
+	cd etl && KAFKA_BOOTSTRAP_SERVERS=localhost:9092 uv run python -m src.elt.extractors --kafka
+
+# ── Lint ─────────────────────────────────────────────────────────────────────
+
 lint:
 	uv tool run ruff check api/main.py scripts/ scripts/../etl/src/ scripts/../etl/dags/

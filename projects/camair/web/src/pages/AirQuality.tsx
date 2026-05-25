@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Cloud, Layers } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { fetchAirQuality } from "@/services/airQualityService";
+import { realTimeService } from "@/services/realTimeService";
 import type { AirQualityRecord, PollutantType } from "@/types/air-quality.types";
 import {
   ViewOptionsPanel,
@@ -44,6 +45,15 @@ export default function AirQuality() {
 
   useEffect(() => {
     loadData();
+    const unsubscribe = realTimeService.subscribe((updated) => {
+      setData(updated);
+      setSelectedProvince((prev) => {
+        if (prev && updated.some((r) => r.name === prev)) return prev;
+        const phnomPenh = updated.find((r) => r.name === "Phnom Penh");
+        return phnomPenh ? "Phnom Penh" : updated[0]?.name ?? null;
+      });
+    });
+    return unsubscribe;
   }, []);
 
   const loadData = async () => {
