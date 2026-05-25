@@ -8,6 +8,11 @@ DB_CONFIG = {
     "password": os.getenv("DB_PASSWORD", "airflow"),
 }
 
+SQLALCHEMY_DATABASE_URL = (
+    f"postgresql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@"
+    f"{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
+)
+
 AQI_COLS = [
     "id", "name", "co", "no2", "o3", "so2", "pm2_5", "pm10",
     "us_epa_index", "gb_defra_index",

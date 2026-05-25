@@ -1,53 +1,72 @@
 import json
-from fastapi import APIRouter, HTTPException, Query
-from database import query_db
+from fastapi import APIRouter, HTTPException, Query, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import func, cast
+from geoalchemy2 import Geography, Geometry
+from geoalchemy2.functions import ST_AsGeoJSON, ST_Distance, ST_DWithin
+
+from database import get_db
+import models
 
 router = APIRouter(prefix="/api/v1/provinces", tags=["provinces"])
 
 @router.get("")
-def list_provinces():
+def list_provinces(db: Session = Depends(get_db)):
+    provinces = db.query(models.Province).order_by(models.Province.name).all()
+    # Manual serialization to avoid geometry issues in default pydantic
     return {
-        "data": query_db(
-            "SELECT adm1_pcode, name, center_lat, center_lon, area_sqkm "
-            "FROM provinces ORDER BY name"
-        )
+        "data": [
+            {
+                "adm1_pcode": p.adm1_pcode,
+                "name": p.name,
+                "center_lat": p.center_lat,
+                "center_lon": p.center_lon,
+                "area_sqkm": p.area_sqkm
+            } for p in provinces
+        ]
     }
 
 @router.get("/geojson")
-def provinces_geojson():
-    rows = query_db(
-        "SELECT name, adm1_pcode, center_lat, center_lon, area_sqkm, "
-        "ST_AsGeoJSON(geom) AS geometry FROM provinces ORDER BY name"
-    )
+def provinces_geojson(db: Session = Depends(get_db)):
+    results = db.query(
+        models.Province,
+        func.ST_AsGeoJSON(models.Province.geom).label("geometry")
+    ).all()
+    
     features = []
-    for row in rows:
+    for row, geometry_json in results:
         features.append({
             "type": "Feature",
             "properties": {
-                "adm1_name": row["name"],
-                "adm1_pcode": row["adm1_pcode"],
-                "center_lat": row["center_lat"],
-                "center_lon": row["center_lon"],
-                "area_sqkm": row["area_sqkm"],
+                "adm1_name": row.name,
+                "adm1_pcode": row.adm1_pcode,
+                "center_lat": row.center_lat,
+                "center_lon": row.center_lon,
+                "area_sqkm": row.area_sqkm,
             },
-            "geometry": json.loads(row["geometry"]),
+            "geometry": json.loads(geometry_json),
         })
     return {"type": "FeatureCollection", "features": features}
 
 @router.get("/{name}")
-def get_province(name: str):
-    rows = query_db(
-        "SELECT name, adm1_pcode, center_lat, center_lon, area_sqkm, "
-        "ST_AsGeoJSON(geom) AS geometry FROM provinces WHERE name = %s",
-        (name,),
-    )
-    if not rows:
+def get_province(name: str, db: Session = Depends(get_db)):
+    result = db.query(
+        models.Province,
+        func.ST_AsGeoJSON(models.Province.geom).label("geometry")
+    ).filter(models.Province.name == name).first()
+    
+    if not result:
         raise HTTPException(status_code=404, detail=f"Province '{name}' not found")
-    row = rows[0]
+    
+    row, geometry_json = result
     return {
         "data": {
-            **{k: row[k] for k in ("name", "adm1_pcode", "center_lat", "center_lon", "area_sqkm")},
-            "geometry": json.loads(row["geometry"]),
+            "name": row.name,
+            "adm1_pcode": row.adm1_pcode,
+            "center_lat": row.center_lat,
+            "center_lon": row.center_lon,
+            "area_sqkm": row.area_sqkm,
+            "geometry": json.loads(geometry_json),
         }
     }
 
@@ -55,17 +74,33 @@ def get_province(name: str):
 def get_nearby_provinces(
     name: str,
     distance_km: float = Query(50, description="Search radius in kilometres"),
+    db: Session = Depends(get_db)
 ):
-    rows = query_db(
-        """
-        SELECT p2.name, p2.adm1_pcode, p2.center_lat, p2.center_lon,
-               ROUND(ST_Distance(p1.geom::geography, p2.geom::geography) / 1000) AS distance_km
-        FROM provinces p1, provinces p2
-        WHERE p1.name = %s
-          AND p2.name != %s
-          AND ST_DWithin(p1.geom::geography, p2.geom::geography, %s * 1000)
-        ORDER BY distance_km
-        """,
-        (name, name, distance_km),
-    )
-    return {"province": name, "distance_km": distance_km, "data": rows}
+    target = db.query(models.Province).filter(models.Province.name == name).first()
+    if not target:
+        raise HTTPException(status_code=404, detail=f"Province '{name}' not found")
+
+    # Use cast to Geography for accurate distance in meters
+    nearby = db.query(
+        models.Province.name,
+        models.Province.adm1_pcode,
+        models.Province.center_lat,
+        models.Province.center_lon,
+        func.round(func.ST_Distance(
+            cast(target.geom, Geography), 
+            cast(models.Province.geom, Geography)
+        ) / 1000).label("distance_km")
+    ).filter(
+        models.Province.name != name,
+        func.ST_DWithin(
+            cast(target.geom, Geography), 
+            cast(models.Province.geom, Geography), 
+            distance_km * 1000
+        )
+    ).order_by("distance_km").all()
+
+    return {
+        "province": name,
+        "distance_km": distance_km,
+        "data": [dict(r._asdict()) for r in nearby]
+    }

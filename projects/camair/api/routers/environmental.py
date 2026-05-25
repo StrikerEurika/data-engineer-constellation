@@ -1,45 +1,55 @@
-from fastapi import APIRouter
-from database import query_db, fetch_latest
-from config import AQI_COLS, WEATHER_COLS, UV_COLS
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from sqlalchemy import func
+
+from database import get_db
+import models
+import schemas
 
 router = APIRouter(prefix="/api/v1/realtime-api", tags=["environmental"])
 
-@router.get("/aqi")
-def get_air_quality():
-    return {"data": fetch_latest("processed_air_quality", AQI_COLS)}
+def get_latest_records(db: Session, model):
+    """Helper to get DISTINCT ON (name) records ordered by created_at DESC."""
+    # SQLAlchemy doesn't have a direct .distinct('name') for all dialects,
+    # but for Postgres we can use distinct(model.name)
+    return db.query(model).distinct(model.name).order_by(
+        model.name, 
+        model.created_at_ts.desc()
+    ).all()
 
-@router.get("/weather")
-def get_weather():
-    return {"data": fetch_latest("processed_weather", WEATHER_COLS)}
+@router.get("/aqi", response_model=schemas.ApiResponse[schemas.AirQualityBase])
+def get_air_quality(db: Session = Depends(get_db)):
+    return {"data": get_latest_records(db, models.AirQuality)}
 
-@router.get("/uv")
-def get_uv():
-    return {"data": fetch_latest("processed_uv_index", UV_COLS)}
+@router.get("/weather", response_model=schemas.ApiResponse[schemas.WeatherBase])
+def get_weather(db: Session = Depends(get_db)):
+    return {"data": get_latest_records(db, models.Weather)}
+
+@router.get("/uv", response_model=schemas.ApiResponse[schemas.UVBase])
+def get_uv(db: Session = Depends(get_db)):
+    return {"data": get_latest_records(db, models.UVIndex)}
 
 @router.get("/all")
-def get_all_environmental():
-    aqi = {r["name"]: r for r in fetch_latest("processed_air_quality", AQI_COLS)}
-    weather = {r["name"]: r for r in fetch_latest("processed_weather", WEATHER_COLS)}
-    uv_data = {r["name"]: r for r in fetch_latest("processed_uv_index", UV_COLS)}
+def get_all_environmental(db: Session = Depends(get_db)):
+    aqi_list = get_latest_records(db, models.AirQuality)
+    weather_list = get_latest_records(db, models.Weather)
+    uv_list = get_latest_records(db, models.UVIndex)
+    
+    aqi_map = {r.name: r for r in aqi_list}
+    weather_map = {r.name: r for r in weather_list}
+    uv_map = {r.name: r for r in uv_list}
 
-    province_coords = {
-        r["name"]: (r["center_lat"], r["center_lon"])
-        for r in query_db(
-            "SELECT name, center_lat, center_lon FROM provinces WHERE center_lat IS NOT NULL"
-        )
-    }
-
-    provinces = set(aqi) | set(weather) | set(uv_data)
+    provinces = db.query(models.Province).order_by(models.Province.name).all()
+    
     combined = []
-    for name in sorted(provinces):
-        coords = province_coords.get(name)
+    for p in provinces:
         combined.append({
-            "name": name,
-            "lat": coords[0] if coords else None,
-            "lng": coords[1] if coords else None,
-            "air_quality": aqi.get(name),
-            "weather": weather.get(name),
-            "uv": uv_data.get(name),
+            "name": p.name,
+            "lat": p.center_lat,
+            "lng": p.center_lon,
+            "air_quality": aqi_map.get(p.name),
+            "weather": weather_map.get(p.name),
+            "uv": uv_map.get(p.name),
         })
 
     return {"data": combined}
