@@ -1,17 +1,23 @@
 import json
 import os
+import pathlib
+
 import psycopg2
 import psycopg2.extras
 
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "postgres"),
+    "host": os.getenv("DB_HOST", "localhost"),
     "port": int(os.getenv("DB_PORT", 5432)),
     "dbname": os.getenv("DB_NAME", "camair"),
     "user": os.getenv("DB_USER", "airflow"),
     "password": os.getenv("DB_PASSWORD", "airflow"),
 }
 
-GEOJSON_PATH = os.getenv("GEOJSON_PATH", "/geo/cambodia-provinces.geojson")
+_DEFAULT_GEOJSON = str(
+    pathlib.Path(__file__).resolve().parent.parent
+    / "web" / "src" / "assets" / "geoData" / "cambodia-provinces.geojson"
+)
+GEOJSON_PATH = os.getenv("GEOJSON_PATH", _DEFAULT_GEOJSON)
 
 
 def get_connection():

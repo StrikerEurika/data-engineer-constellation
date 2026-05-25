@@ -16,9 +16,9 @@ app.add_middleware(
 )
 
 DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "postgres"),
+    "host": os.getenv("DB_HOST", "localhost"),
     "port": int(os.getenv("DB_PORT", 5432)),
-    "dbname": os.getenv("DB_NAME", "airflow"),
+    "dbname": os.getenv("DB_NAME", "camair"),
     "user": os.getenv("DB_USER", "airflow"),
     "password": os.getenv("DB_PASSWORD", "airflow"),
 }
