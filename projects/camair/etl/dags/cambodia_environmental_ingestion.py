@@ -9,7 +9,7 @@ from src.elt.extractors import (
 )
 
 with DAG(
-    'cambodia_environmental_ingestion',
+    'cambodia_environmental_ingestion', # DAG identity name
     default_args=DEFAULT_DAG_ARGS,
     description='Fetch air quality, weather, and UV data from Cambodia MEF API',
     schedule_interval=timedelta(hours=1),
