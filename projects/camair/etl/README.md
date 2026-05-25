@@ -1,15 +1,15 @@
-# Cambodia Air Quality ETL Pipeline
+# Cambodia Environmental Data ETL Pipeline
 
-This project is an automated data pipeline that fetches real-time air quality data from Cambodia, streams it through Kafka, processes it using Apache Spark, and stores the results in PostgreSQL and Parquet files.
+This project is an automated data pipeline that fetches real-time **air quality**, **weather**, and **UV index** data from the Cambodia MEF API, streams through Kafka, processes with Apache Spark, and stores results in PostgreSQL and Parquet files — covering all 25 provinces.
 
 ## Architecture
 
-1.  **Airflow (DAG)**: Fetches data from the MEF API and pushes it to a Kafka topic (`raw_air_quality`).
-2.  **Kafka**: Acts as a message broker for the raw data stream.
-3.  **Spark**: Reads the stream from Kafka, transforms the data (schema parsing, timestamp cleaning), and writes it to:
-    -   **PostgreSQL**: For structured querying.
-    -   **Parquet**: For long-term storage (Data Lake).
-4.  **PostgreSQL**: Stores Airflow metadata and the final processed data.
+1.  **Airflow (DAG `cambodia_environmental_ingestion`)**: Fetches data from 3 MEF API endpoints and pushes each to its own Kafka topic (`raw_air_quality`, `raw_weather`, `raw_uv`).
+2.  **Kafka**: Acts as a message broker with 3 topics for raw data streams.
+3.  **Spark (3 streaming jobs)**: Each job reads from its Kafka topic, parses the schema, cleans timestamps, and writes to:
+    -   **PostgreSQL**: 3 tables (`processed_air_quality`, `processed_weather`, `processed_uv_index`).
+    -   **Parquet**: 3 directories for long-term storage (Data Lake).
+4.  **PostgreSQL**: Stores Airflow metadata and the 3 processed data tables.
 
 ## Prerequisites
 
@@ -42,7 +42,7 @@ docker-compose up -d
 ### 4. Trigger the Pipeline
 
 1.  Log in to the Airflow UI.
-2.  Find the DAG named `cambodia_air_quality_ingestion`.
+2.  Find the DAG named `cambodia_environmental_ingestion`.
 3.  Turn the toggle to **On**.
 4.  Trigger the DAG manually (or wait for the schedule).
 
@@ -58,7 +58,7 @@ docker-compose up -d
         -   **Database**: `camair`
         -   **User**: `airflow`
         -   **Password**: `airflow`
-        -   **Table**: `processed_air_quality`
+        -   **Tables**: `processed_air_quality`, `processed_weather`, `processed_uv_index`
 
 ## Project Structure
 

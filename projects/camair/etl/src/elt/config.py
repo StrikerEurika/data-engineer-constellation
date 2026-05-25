@@ -13,7 +13,11 @@ DEFAULT_DAG_ARGS = {
 
 # API config
 AIR_QUALITY_API_URL = "https://data.mef.gov.kh/api/v1/realtime-api/aqi"
+WEATHER_API_URL = "https://data.mef.gov.kh/api/v1/realtime-api/weather"
+UV_API_URL = "https://data.mef.gov.kh/api/v1/realtime-api/uv"
 
 # kafka
 KAFKA_BOOTSTRAP_SERVERS = ['kafka:29092']
-KAFKA_TOPIC_RAW = 'raw_air_quality'
+KAFKA_TOPIC_AIR_QUALITY = 'raw_air_quality'
+KAFKA_TOPIC_WEATHER = 'raw_weather'
+KAFKA_TOPIC_UV = 'raw_uv'

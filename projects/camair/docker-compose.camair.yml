@@ -31,7 +31,7 @@ services:
   # 1. POSTGRES DATABASE (AIRFLOW BACKEND)
   # -----------------------------
   postgres:
-    image: postgres:13
+    image: postgis/postgis:13-3.4
     container_name: postgres
     environment:
       POSTGRES_USER: airflow
@@ -100,7 +100,7 @@ services:
   # -----------------------------
   # api:
   #   build:
-  #   context: ./api
+  #     context: ./api
   #     dockerfile: Dockerfile
   #   container_name: camair-api
   #   ports:
@@ -116,8 +116,32 @@ services:
   #       condition: service_healthy
   #   restart: unless-stopped
 
+  # # -----------------------------
+  # # 5. PROVINCE GEOGRAPHY SEEDER
+  # # -----------------------------
+  # seed-provinces:
+  #   image: python:3.11-slim
+  #   container_name: camair-seed
+  #   command: >
+  #     sh -c "pip install -q psycopg2-binary &&
+  #            python /scripts/seed_provinces.py"
+  #   environment:
+  #     DB_HOST: postgres
+  #     DB_PORT: 5432
+  #     DB_NAME: camair
+  #     DB_USER: airflow
+  #     DB_PASSWORD: airflow
+  #     GEOJSON_PATH: /geo/cambodia-provinces.geojson
+  #   volumes:
+  #     - ./scripts/seed_provinces.py:/scripts/seed_provinces.py
+  #     - ./web/src/assets/geoData/cambodia-provinces.geojson:/geo/cambodia-provinces.geojson
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   restart: "no"
+
   # -----------------------------
-  # 5. ZOOKEEPER
+  # 6. ZOOKEEPER
   # -----------------------------
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -129,7 +153,7 @@ services:
       - "2181:2181"
 
   # -----------------------------
-  # 6. KAFKA
+  # 7. KAFKA
   # -----------------------------
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -149,7 +173,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
   # -----------------------------
-  # 7. SPARK MASTER
+  # 8. SPARK MASTER
   # -----------------------------
   spark-master:
     image: apache/spark:3.5.1
@@ -166,7 +190,7 @@ services:
       retries: 5
 
   # -----------------------------
-  # 8. SPARK WORKER
+  # 9. SPARK WORKER
   # -----------------------------
   spark-worker:
     image: apache/spark:3.5.1
@@ -177,16 +201,51 @@ services:
       - spark-master
 
   # -----------------------------
-  # 9. SPARK STREAMING JOB
+  # 10. SPARK STREAMING JOBS
   # -----------------------------
-  spark-job:
+  spark-job-air-quality:
     image: apache/spark:3.5.1
-    container_name: spark-job
+    container_name: spark-job-air-quality
     user: root
-    # Run spark-submit directly to start the continuous streaming process
     command: >
       /opt/spark/bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,org.postgresql:postgresql:42.6.0 --master spark://spark-master:7077 /opt/app/spark/process_air_quality.py
-    depends_on: 
+    depends_on:
+      spark-master:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./etl/src/elt/spark:/opt/app/spark
+      - ./etl/data:/opt/spark/data
+    restart: on-failure
+
+  spark-job-weather:
+    image: apache/spark:3.5.1
+    container_name: spark-job-weather
+    user: root
+    command: >
+      /opt/spark/bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,org.postgresql:postgresql:42.6.0 --master spark://spark-master:7077 /opt/app/spark/process_weather.py
+    depends_on:
+      spark-master:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./etl/src/elt/spark:/opt/app/spark
+      - ./etl/data:/opt/spark/data
+    restart: on-failure
+
+  spark-job-uv:
+    image: apache/spark:3.5.1
+    container_name: spark-job-uv
+    user: root
+    command: >
+      /opt/spark/bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,org.postgresql:postgresql:42.6.0 --master spark://spark-master:7077 /opt/app/spark/process_uv.py
+    depends_on:
       spark-master:
         condition: service_healthy
       kafka:
