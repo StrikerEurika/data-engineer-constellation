@@ -6,13 +6,29 @@ import { WeatherMap } from "../components/weather/WeatherMap";
 import { AirQualityCard } from "../components/weather/AirQualityCard";
 import { RainChanceCard } from "../components/weather/RainChanceCard";
 import { UVIndexCard } from "../components/weather/UVIndexCard";
-import { fetchWeather, fetchUV } from "../services/weatherService";
+import {
+  fetchAirQualityTrend,
+  fetchUV,
+  fetchUVTrend,
+  fetchWeather,
+  fetchWeatherTrend,
+} from "../services/weatherService";
 import { realTimeService } from "../services/realTimeService";
-import type { WeatherRecord, UVRecord } from "../types/weather";
+import type {
+  AirQualityData,
+  AirQualityRecord,
+  RainChanceData,
+  UVIndexData,
+  UVRecord,
+  WeatherRecord,
+} from "../types/weather";
 
 export default function WeatherDashboard() {
   const [weatherData, setWeatherData] = useState<WeatherRecord[]>([]);
   const [uvData, setUvData] = useState<UVRecord[]>([]);
+  const [weatherTrend, setWeatherTrend] = useState<WeatherRecord[]>([]);
+  const [uvTrend, setUvTrend] = useState<UVRecord[]>([]);
+  const [airQualityTrend, setAirQualityTrend] = useState<AirQualityRecord[]>([]);
   const [selectedProvince, setSelectedProvince] = useState("Phnom Penh");
   const [loading, setLoading] = useState(true);
 
@@ -55,6 +71,10 @@ export default function WeatherDashboard() {
     };
   }, []);
 
+  useEffect(() => {
+    loadProvinceTrends(selectedProvince);
+  }, [selectedProvince]);
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -65,6 +85,24 @@ export default function WeatherDashboard() {
       console.error("Failed to load dashboard data", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadProvinceTrends = async (province: string) => {
+    try {
+      const [weatherTrendRes, uvTrendRes, airQualityTrendRes] = await Promise.all([
+        fetchWeatherTrend(province),
+        fetchUVTrend(province),
+        fetchAirQualityTrend(province),
+      ]);
+      setWeatherTrend(weatherTrendRes.data);
+      setUvTrend(uvTrendRes.data);
+      setAirQualityTrend(airQualityTrendRes.data);
+    } catch (error) {
+      console.error("Failed to load province trends", error);
+      setWeatherTrend([]);
+      setUvTrend([]);
+      setAirQualityTrend([]);
     }
   };
 
@@ -85,17 +123,57 @@ export default function WeatherDashboard() {
     return `${Math.floor(diffMins / 60)} hours ago`;
   };
 
-  // Convert current UV to chart format if needed, but UVIndexCard expects a series
-  // For now we just pass a single-item array or mock some history based on current
-  const uvChartData = currentProvinceUV ? [
-    { day: "Today", value: currentProvinceUV.uv, level: getUvLevel(currentProvinceUV.uv) }
-  ] : [];
+  const trendWeatherSource = weatherTrend.length
+    ? weatherTrend
+    : currentProvinceWeather
+      ? [currentProvinceWeather]
+      : [];
+
+  const rainChartData: RainChanceData[] = trendWeatherSource.map((record, index) => ({
+    day: formatTrendLabel(record.created_at_ts || record.created_at, index),
+    chance: estimateRainChance(record),
+  }));
+
+  const uvChartData: UVIndexData[] = (uvTrend.length
+    ? uvTrend
+    : currentProvinceUV
+      ? [currentProvinceUV]
+      : []
+  ).map((record, index) => ({
+    day: formatTrendLabel(record.created_at_ts || record.created_at, index),
+    value: record.uv,
+    level: getUvLevel(record.uv),
+  }));
+
+  const airQualityChartData: AirQualityData[] = airQualityTrend.map((record, index) => ({
+    day: formatTrendLabel(record.created_at_ts || record.created_at, index),
+    clean: record.us_epa_index <= 1 ? record.pm2_5 : 0,
+    average: record.us_epa_index > 1 && record.us_epa_index <= 3 ? record.pm2_5 : 0,
+    harmful: record.us_epa_index > 3 ? record.pm2_5 : 0,
+  }));
 
   function getUvLevel(value: number): 'low' | 'moderate' | 'high' | 'very-high' {
     if (value <= 2) return 'low';
     if (value <= 5) return 'moderate';
     if (value <= 7) return 'high';
     return 'very-high';
+  }
+
+  function formatTrendLabel(timestamp: string | undefined, fallbackIndex: number): string {
+    if (!timestamp) return `T-${fallbackIndex}`;
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return `T-${fallbackIndex}`;
+
+    return date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
+  function estimateRainChance(record: WeatherRecord): number {
+    const precipSignal = Math.min(record.precip_mm * 25, 70);
+    const cloudSignal = record.cloud * 0.3;
+    return Math.round(Math.min(100, precipSignal + cloudSignal));
   }
 
   if (loading && !weatherData.length) {
@@ -170,8 +248,9 @@ export default function WeatherDashboard() {
            </div>
         </div>
 
-        <AirQualityCard data={[]} />
-        <UVIndexCard data={uvChartData as any} />
+        <RainChanceCard data={rainChartData} />
+        <AirQualityCard data={airQualityChartData} />
+        <UVIndexCard data={uvChartData} />
       </div>
     </>
   );

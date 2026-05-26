@@ -27,6 +27,7 @@ export interface WeatherRecord {
   last_updated: string;
   last_updated_epoch: number;
   created_at: string;
+  created_at_ts?: string;
 }
 
 export interface UVRecord {
@@ -36,6 +37,55 @@ export interface UVRecord {
   last_updated: string;
   last_updated_epoch: number;
   created_at: string;
+  created_at_ts?: string;
+}
+
+export interface AirQualityRecord {
+  id: number;
+  name: string;
+  co: number;
+  no2: number;
+  o3: number;
+  so2: number;
+  pm2_5: number;
+  pm10: number;
+  us_epa_index: number;
+  gb_defra_index: number;
+  last_updated: string;
+  last_updated_epoch: number;
+  created_at: string;
+  created_at_ts?: string;
+}
+
+export interface RainChanceData {
+  day: string;
+  chance: number;
+}
+
+export interface AirQualityData {
+  day: string;
+  clean: number;
+  average: number;
+  harmful: number;
+}
+
+export interface UVIndexData {
+  day: string;
+  value: number;
+  level: 'low' | 'moderate' | 'high' | 'very-high';
+}
+
+export interface WeatherForecast {
+  day: string;
+  date: string;
+  condition: 'sunny' | 'cloudy' | 'rainy' | 'partly-cloudy';
+  temp: number;
+}
+
+export interface WeatherCity {
+  id: string;
+  name: string;
+  forecasts: WeatherForecast[];
 }
 
 export interface ApiResponse<T> {
