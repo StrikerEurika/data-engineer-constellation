@@ -1,6 +1,13 @@
-from pydantic import BaseModel
 from datetime import datetime
-from typing import Optional, List, Any
+from typing import Generic, Optional, TypeVar
+
+from pydantic import BaseModel
+
+T = TypeVar("T")
+
+
+class ApiResponse(BaseModel, Generic[T]):
+    data: list[T]
 
 class ProvinceBase(BaseModel):
     adm1_pcode: str

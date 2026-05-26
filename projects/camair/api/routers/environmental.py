@@ -1,6 +1,8 @@
+from datetime import UTC, datetime, timedelta
+from typing import Any
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
 
 from database import get_db
 import models
@@ -9,7 +11,7 @@ import schemas
 # This router provides endpoints
 router = APIRouter(prefix="/api/v1/realtime-api", tags=["environmental"])
 
-def get_latest_records(db: Session, model):
+def get_latest_records(db: Session, model: type[Any]) -> list[Any]:
     """Helper to get DISTINCT ON (name) records ordered by created_at DESC."""
     # SQLAlchemy doesn't have a direct .distinct('name') for all dialects,
     # but for Postgres we can use distinct(model.name)
@@ -18,17 +20,59 @@ def get_latest_records(db: Session, model):
         model.created_at_ts.desc()
     ).all()
 
+
+def get_trend_records(
+    db: Session,
+    model: type[Any],
+    province: str | None = None,
+    hours: int = 24,
+) -> list[Any]:
+    cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=hours)
+    query = db.query(model).filter(model.created_at_ts >= cutoff)
+
+    if province:
+        query = query.filter(model.name == province)
+
+    return query.order_by(model.name, model.created_at_ts.asc()).all()
+
 @router.get("/aqi", response_model=schemas.ApiResponse[schemas.AirQualityBase])
 def get_air_quality(db: Session = Depends(get_db)):
     return {"data": get_latest_records(db, models.AirQuality)}
+
+
+@router.get("/aqi/trends", response_model=schemas.ApiResponse[schemas.AirQualityBase])
+def get_air_quality_trends(
+    province: str | None = None,
+    hours: int = 24,
+    db: Session = Depends(get_db),
+):
+    return {"data": get_trend_records(db, models.AirQuality, province, hours)}
 
 @router.get("/weather", response_model=schemas.ApiResponse[schemas.WeatherBase])
 def get_weather(db: Session = Depends(get_db)):
     return {"data": get_latest_records(db, models.Weather)}
 
+
+@router.get("/weather/trends", response_model=schemas.ApiResponse[schemas.WeatherBase])
+def get_weather_trends(
+    province: str | None = None,
+    hours: int = 24,
+    db: Session = Depends(get_db),
+):
+    return {"data": get_trend_records(db, models.Weather, province, hours)}
+
 @router.get("/uv", response_model=schemas.ApiResponse[schemas.UVBase])
 def get_uv(db: Session = Depends(get_db)):
     return {"data": get_latest_records(db, models.UVIndex)}
+
+
+@router.get("/uv/trends", response_model=schemas.ApiResponse[schemas.UVBase])
+def get_uv_trends(
+    province: str | None = None,
+    hours: int = 24,
+    db: Session = Depends(get_db),
+):
+    return {"data": get_trend_records(db, models.UVIndex, province, hours)}
 
 @router.get("/all")
 def get_all_environmental(db: Session = Depends(get_db)):
