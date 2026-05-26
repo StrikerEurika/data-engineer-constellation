@@ -6,6 +6,7 @@ from database import get_db
 import models
 import schemas
 
+# This router provides endpoints
 router = APIRouter(prefix="/api/v1/realtime-api", tags=["environmental"])
 
 def get_latest_records(db: Session, model):
