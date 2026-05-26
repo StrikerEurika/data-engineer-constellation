@@ -211,7 +211,12 @@ services:
     container_name: spark-job-air-quality
     user: root
     command: >
-      /opt/spark/bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,org.postgresql:postgresql:42.6.0 --master spark://spark-master:7077 /opt/app/spark/process_air_quality.py
+      /opt/spark/bin/spark-submit 
+      --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,org.postgresql:postgresql:42.6.0 
+      --master spark://spark-master:7077 
+      --total-executor-cores 2
+      --executor-memory 1G
+      /opt/app/spark/process_air_quality.py
     depends_on:
       spark-master:
         condition: service_healthy
@@ -229,7 +234,12 @@ services:
     container_name: spark-job-weather
     user: root
     command: >
-      /opt/spark/bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,org.postgresql:postgresql:42.6.0 --master spark://spark-master:7077 /opt/app/spark/process_weather.py
+      /opt/spark/bin/spark-submit 
+      --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,org.postgresql:postgresql:42.6.0 
+      --master spark://spark-master:7077 
+      --total-executor-cores 2
+      --executor-memory 1G
+      /opt/app/spark/process_weather.py
     depends_on:
       spark-master:
         condition: service_healthy
@@ -247,7 +257,12 @@ services:
     container_name: spark-job-uv
     user: root
     command: >
-      /opt/spark/bin/spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,org.postgresql:postgresql:42.6.0 --master spark://spark-master:7077 /opt/app/spark/process_uv.py
+      /opt/spark/bin/spark-submit 
+      --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,org.postgresql:postgresql:42.6.0 
+      --master spark://spark-master:7077 
+      --total-executor-cores 2
+      --executor-memory 1G
+      /opt/app/spark/process_uv.py
     depends_on:
       spark-master:
         condition: service_healthy
