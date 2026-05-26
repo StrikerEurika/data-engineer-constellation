@@ -22,15 +22,15 @@ This project is an automated data pipeline that fetches real-time **air quality*
 Run the following command to build the custom Airflow image (which includes Java and PySpark) and initialize the database:
 
 ```bash
-docker-compose up airflow-init
+docker compose -f docker-compose.camair.yml up airflow-init
 ```
 
-### 2. Start all Services
+### 2. Start all Services (Convenient for Development)
 
 Once initialization is complete, start all components:
 
 ```bash
-docker-compose up -d
+docker compose -f docker-compose.camair.yml up -d
 ```
 
 ### 3. Access Airflow UI
@@ -105,41 +105,3 @@ To view the data processed by Spark, you can use the following steps:
    ```
 
 By following these steps, you can view and analyze the data processed by Spark.
-
-## Get the Data
-
-To "get the data" (meaning to read or use it), you have three main ways depending on what you want to
-  do:
-
-  1. Manual Export (To your Windows Desktop)
-  If the volume mapping is still being difficult, you can "pull" the files out of the container        
-  manually using the docker cp command.
-  Run this in your PowerShell:
-   1 docker cp spark-job:/opt/spark/data/processed_air_quality ./exported_data
-  This will create a folder named exported_data on your computer containing all the Parquet files.     
-
-  2. Reading the Data with Python (Pandas)
-  Parquet is a binary format (you can't read it in Notepad). The easiest way to see the actual data is
-  using Pandas. If you have Python installed locally, you can do this:
-
-   1 import pandas as pd
-   2
-   3 # Once the volume is working or you've used 'docker cp'
-   4 df = pd.read_parquet('./projects/camair/etl/data/processed_air_quality')
-   5 print(df.head())
-  Note: You might need to install pip install pandas pyarrow first.
-
-  3. The "Automatic" Way (Fixing the Volume)
-  If you follow the "Fix" from my previous message (Stop → Delete local data folder → Restart), the
-  Parquet files will automatically appear in your Windows folder:
-  D:\Schools\ITC\Year 4\Semester 2\de\camair\camair-etl\data\processed_air_quality
-
-  Once they are there, any tool that supports Parquet (like VS Code with a "Parquet Viewer" extension)
-  can open them directly.
-
-  4. Querying inside the container (Quick Look)
-  If you just want to see a few rows of the data right now without moving files, you can tell the
-  running Spark container to read its own files and print them:
-
-   1 docker exec spark-job /opt/spark/bin/spark-submit --execute
-     "spark.read.parquet('/opt/spark/data/processed_air_quality').show()"

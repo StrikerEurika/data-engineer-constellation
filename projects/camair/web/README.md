@@ -71,3 +71,10 @@ export default defineConfig([
   },
 ])
 ```
+
+## Summary of Ports:
+  * API: http://localhost:8000 (http://localhost:8000)
+  * Frontend: http://localhost:5173 (http://localhost:5173) (Standard Vite port)
+  * Spark UI: http://localhost:8081 (http://localhost:8081)
+  * Airflow UI: http://localhost:8080 (http://localhost:8080)
+  * PgAdmin: http://localhost:5050 (http://localhost:5050)
