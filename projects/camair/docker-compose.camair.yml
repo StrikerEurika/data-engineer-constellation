@@ -9,7 +9,10 @@ x-airflow-common:
 
   ## Remote
   &airflow-common 
-  image: apache/airflow:2.8.1-python3.11
+  build:
+    context: ./etl
+    dockerfile: ./docker/Dockerfile.airflow
+  image: camair-airflow:2.8.1-custom
   environment:
     AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
