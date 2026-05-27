@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export type PollutantType = "pm2_5" | "pm10" | "o3" | "no2" | "so2" | "co";
+export type PollutantType = "pm2_5" | "pm10" | "o3" | "no2" | "so2" | "co" | "uv";
 
 export interface PollutantConfig {
   name: string;
@@ -44,6 +44,7 @@ export interface AirQualityData {
   o3: number;
   so2: number;
   co: number;
+  uv?: number;
   timestamp?: string;
 }
 
@@ -58,6 +59,7 @@ export interface AirQualityRecord {
   pm10: number;
   us_epa_index: number;
   gb_defra_index: number;
+  uv?: number;
   last_updated: string;
   last_updated_epoch: number;
   created_at: string;

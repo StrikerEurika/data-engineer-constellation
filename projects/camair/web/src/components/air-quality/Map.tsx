@@ -1,9 +1,10 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 
 import type { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { AirQualityRecord, PollutantType } from "@/types/air-quality.types";
+import type { UVRecord } from "@/types/weather";
 import { ProvinceMapOverlay } from "@/components/map/ProvinceMapOverlay";
 import cambodiaGeoJsonUrl from "@/assets/geoData/cambodia-provinces.geojson?url";
 
@@ -27,6 +28,7 @@ interface MapProps {
   zoom: number;
   loading: boolean;
   filteredData: AirQualityRecord[];
+  uvData?: UVRecord[];
   selectedProvince: string | null;
   onProvinceSelect: (name: string) => void;
   mapRef: React.MutableRefObject<LeafletMap | null>;
@@ -39,6 +41,7 @@ export function Map({
   zoom,
   loading,
   filteredData,
+  uvData = [],
   selectedProvince,
   onProvinceSelect,
   mapRef,
@@ -72,6 +75,7 @@ export function Map({
         <ProvinceMapOverlay
           geoJsonUrl={cambodiaGeoJsonUrl}
           airQualityData={filteredData}
+          uvData={uvData}
           selectedProvince={selectedProvince}
           onSelectProvince={onProvinceSelect}
           selectedPollutant={selectedPollutant}

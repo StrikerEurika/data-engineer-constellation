@@ -32,16 +32,24 @@ function formatToUTC7(
 
 // Alternative: Using Intl.DateTimeFormat (more robust)
 function formatToUTC7Intl(date: Date): string {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Bangkok", // UTC+7
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
-  return formatter.format(date);
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    return "Invalid Date";
+  }
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Bangkok", // UTC+7
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+    return formatter.format(date);
+  } catch (err) {
+    console.error("Intl format error", err);
+    return date.toLocaleString();
+  }
 }
 
 // "Monday, January 15, 2024 at 17:00:00 GMT+7"

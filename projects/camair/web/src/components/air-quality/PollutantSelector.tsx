@@ -1,4 +1,4 @@
-import { Droplets, Cloud, Wind, Map } from "lucide-react";
+import { Droplets, Cloud, Wind, Map, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import type { PollutantType } from "@/types/air-quality.types";
@@ -11,13 +11,14 @@ const ICON_MAP: Record<PollutantType, React.ReactNode> = {
   no2: <Wind className="w-3 h-3" />,
   so2: <Cloud className="w-3 h-3" />,
   co: <Wind className="w-3 h-3" />,
+  uv: <Sun className="w-3 h-3" />,
 };
 
 type LayerOption = PollutantType | "none";
 
 const LAYER_OPTIONS: { key: LayerOption; label: string; icon: React.ReactNode }[] = [
   { key: "none", label: "Plain", icon: <Map className="w-3 h-3" /> },
-  ...(["pm2_5", "pm10", "o3", "no2"] as PollutantType[]).map((p) => ({
+  ...(["pm2_5", "pm10", "o3", "no2", "uv"] as PollutantType[]).map((p) => ({
     key: p,
     label: POLLUTANT_CONFIG[p].name,
     icon: ICON_MAP[p],

@@ -2,8 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { Cloud, Layers } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { fetchAirQuality } from "@/services/airQualityService";
+import { fetchUV, fetchWeather } from "@/services/weatherService";
 import { realTimeService } from "@/services/realTimeService";
 import type { AirQualityRecord, PollutantType } from "@/types/air-quality.types";
+import type { UVRecord, WeatherRecord } from "@/types/weather";
 import {
   ViewOptionsPanel,
   ProvinceTable,
@@ -13,7 +15,6 @@ import {
   PollutantSelector,
   MapSearchBar,
   ProvinceDetailsPanel,
-  HealthTipsBanner,
 } from "@/components/air-quality";
 import { Header } from "@/layout/Header";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,8 @@ const VIEW_OPTIONS = [
 
 export default function AirQuality() {
   const [data, setData] = useState<AirQualityRecord[]>([]);
+  const [weatherData, setWeatherData] = useState<WeatherRecord[]>([]);
+  const [uvData, setUvData] = useState<UVRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [viewOptionsOpen, setViewOptionsOpen] = useState(false);
@@ -45,7 +48,7 @@ export default function AirQuality() {
 
   useEffect(() => {
     loadData();
-    const unsubscribe = realTimeService.subscribe("air_quality", (updated) => {
+    const unsubscribeAQI = realTimeService.subscribe("air_quality", (updated) => {
       setData(updated as AirQualityRecord[]);
       setSelectedProvince((prev) => {
         if (prev && (updated as AirQualityRecord[]).some((r) => r.name === prev)) return prev;
@@ -53,23 +56,38 @@ export default function AirQuality() {
         return phnomPenh ? "Phnom Penh" : (updated as AirQualityRecord[])[0]?.name ?? null;
       });
     });
-    return unsubscribe;
+
+    const unsubscribeWeather = realTimeService.subscribe("weather", (updated) => {
+      setWeatherData(updated as WeatherRecord[]);
+    });
+    const unsubscribeUV = realTimeService.subscribe("uv", (updated) => {
+      setUvData(updated as UVRecord[]);
+    });
+
+    return () => {
+      unsubscribeAQI();
+      unsubscribeWeather();
+      unsubscribeUV();
+    };
   }, []);
 
   const loadData = async () => {
     setLoading(true);
     try {
-      const response = await fetchAirQuality();
-      setData(response.data);
-      const phnomPenh = response.data.find((r) => r.name === "Phnom Penh");
+      const [aqiRes, weatherRes, uvRes] = await Promise.all([
+        fetchAirQuality(),
+        fetchWeather(),
+        fetchUV()
+      ]);
+      setData(aqiRes.data);
+      setWeatherData(weatherRes.data);
+      setUvData(uvRes.data);
+      const phnomPenh = aqiRes.data.find((r) => r.name === "Phnom Penh");
       if (phnomPenh) {
         setSelectedProvince("Phnom Penh");
       }
     } catch (error) {
-      console.warn("API unavailable, using mock data:", error);
-      const response = await fetchAirQuality();
-      setData(response.data);
-      setSelectedProvince("Phnom Penh");
+      console.warn("API unavailable:", error);
     } finally {
       setLoading(false);
     }
@@ -86,6 +104,8 @@ export default function AirQuality() {
   };
 
   const selectedRecord = data.find((r) => r.name === selectedProvince) || null;
+  const selectedWeather = weatherData.find((w) => w.name === selectedProvince) || null;
+  const selectedUV = uvData.find((u) => u.name === selectedProvince) || null;
 
   const filteredData = data.filter((r) =>
     r.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -167,6 +187,7 @@ export default function AirQuality() {
                 zoom={DEFAULT_ZOOM}
                 loading={loading}
                 filteredData={filteredData}
+                uvData={uvData}
                 selectedProvince={selectedProvince}
                 onProvinceSelect={setSelectedProvince}
                 mapRef={mapRef}
@@ -195,7 +216,11 @@ export default function AirQuality() {
           </Card>
         </div>
 
-        <ProvinceDetailsPanel selectedRecord={selectedRecord} />
+        <ProvinceDetailsPanel 
+          selectedRecord={selectedRecord} 
+          selectedWeather={selectedWeather}
+          selectedUV={selectedUV}
+        />
       </div>
 
       <Card glass>

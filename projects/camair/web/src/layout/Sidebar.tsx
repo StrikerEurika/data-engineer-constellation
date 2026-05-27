@@ -12,7 +12,7 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  // { icon: Home, label: "Dashboard", to: "/dashboard" },
+  { icon: Home, label: "Dashboard", to: "/dashboard" },
   { icon: AirVent, label: "Air Quality", to: "/dashboard/air-quality" },
   // { icon: Clock, label: "Forecast", to: "/dashboard/forecast" },
   // { icon: CheckCircle, label: "Tasks", to: "/dashboard/tasks" },

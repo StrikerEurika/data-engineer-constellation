@@ -4,7 +4,7 @@ export const POLLUTANT_CONFIG: Record<PollutantType, PollutantConfig> = {
   pm2_5: {
     name: "PM2.5",
     unit: "μg/m³",
-    bins: [0, 12, 35.4, 150, 250, 500],
+    bins: [12, 35.4, 150, 250, 500],
     colors: ["#00e400", "#ffff00", "#ff7e00", "#ff0000", "#990000"],
     labels: [
       "Good",
@@ -17,7 +17,7 @@ export const POLLUTANT_CONFIG: Record<PollutantType, PollutantConfig> = {
   pm10: {
     name: "PM10",
     unit: "μg/m³",
-    bins: [0, 54, 154, 254, 354, 604],
+    bins: [54, 154, 254, 354, 604],
     colors: ["#00e400", "#ffff00", "#ff7e00", "#ff0000", "#990000"],
     labels: [
       "Good",
@@ -30,7 +30,7 @@ export const POLLUTANT_CONFIG: Record<PollutantType, PollutantConfig> = {
   no2: {
     name: "NO2",
     unit: "ppb",
-    bins: [0, 53, 100, 200, 400, 600],
+    bins: [53, 100, 200, 400, 600],
     colors: ["#00e400", "#ffff00", "#ff7e00", "#ff0000", "#990000"],
     labels: [
       "Good",
@@ -43,7 +43,7 @@ export const POLLUTANT_CONFIG: Record<PollutantType, PollutantConfig> = {
   o3: {
     name: "O3",
     unit: "ppb",
-    bins: [0, 54, 70, 85, 105, 200],
+    bins: [54, 70, 85, 105, 200],
     colors: ["#00e400", "#ffff00", "#ff7e00", "#ff0000", "#990000"],
     labels: [
       "Good",
@@ -56,7 +56,7 @@ export const POLLUTANT_CONFIG: Record<PollutantType, PollutantConfig> = {
   so2: {
     name: "SO2",
     unit: "ppb",
-    bins: [0, 35, 75, 185, 300, 500],
+    bins: [35, 75, 185, 300, 500],
     colors: ["#00e400", "#ffff00", "#ff7e00", "#ff0000", "#990000"],
     labels: [
       "Good",
@@ -69,7 +69,7 @@ export const POLLUTANT_CONFIG: Record<PollutantType, PollutantConfig> = {
   co: {
     name: "CO",
     unit: "ppm",
-    bins: [0, 4.4, 9.4, 12.4, 15.4, 30],
+    bins: [4.4, 9.4, 12.4, 15.4, 30],
     colors: ["#00e400", "#ffff00", "#ff7e00", "#ff0000", "#990000"],
     labels: [
       "Good",
@@ -78,6 +78,13 @@ export const POLLUTANT_CONFIG: Record<PollutantType, PollutantConfig> = {
       "Unhealthy",
       "Hazardous",
     ],
+  },
+  uv: {
+    name: "UV Index",
+    unit: "",
+    bins: [2, 5, 7, 10, 11],
+    colors: ["#22c55e", "#eab308", "#f97316", "#ef4444", "#7e22ce"],
+    labels: ["Low", "Moderate", "High", "Very High", "Extreme"],
   },
 };
 
@@ -88,4 +95,5 @@ export const POLLUTANT_OPTIONS: { value: PollutantType; label: string }[] = [
   { value: "o3", label: "O₃" },
   { value: "so2", label: "SO₂" },
   { value: "co", label: "CO" },
+  { value: "uv", label: "UV" },
 ];
