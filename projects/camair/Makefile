@@ -48,3 +48,9 @@ etl-fetch-kafka:
 
 lint:
 	uv tool run ruff check api/main.py scripts/ scripts/../etl/src/ scripts/../etl/dags/
+
+# --- Web ──────────────────────────────────────────────────────────────────────────────
+
+# web dev
+web-dev:
+	npm run dev --app-dir web
