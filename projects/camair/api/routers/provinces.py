@@ -1,9 +1,10 @@
 import json
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func, cast
+from sqlalchemy import func, cast, text
 from geoalchemy2 import Geography, Geometry
 from geoalchemy2.functions import ST_AsGeoJSON, ST_Distance, ST_DWithin
+
 
 from database import get_db
 import models
@@ -28,25 +29,57 @@ def list_provinces(db: Session = Depends(get_db)):
 
 @router.get("/geojson")
 def provinces_geojson(db: Session = Depends(get_db)):
-    results = db.query(
-        models.Province,
-        func.ST_AsGeoJSON(models.Province.geom).label("geometry")
-    ).all()
+    # handle geo
+    query = text(
+        """
+        SELECT json_build_object(
+            'type', 'FeatureCollection',
+            'features', jsonb_agg(features.feature)
+        )
+        FROM (
+            WITH latest_air_quality AS (
+                SELECT DISTINCT ON (name)
+                    name,
+                    pm2_5,
+                    pm10,
+                    o3,
+                    no2,
+                    so2,
+                    co,
+                    us_epa_index,
+                    gb_defra_index,
+                    last_updated
+                FROM processed_air_quality
+                ORDER BY name, created_at_ts DESC
+            )
+            SELECT json_build_object(
+                'type',       'Feature',
+                'id',         p.adm1_pcode,
+                'geometry',   ST_AsGeoJSON(ST_SimplifyPreserveTopology(p.geom, 0.01))::jsonb,
+                'properties', jsonb_build_object(
+                    'adm1_name',      p.name,
+                    'adm1_pcode',     p.adm1_pcode,
+                    'center_lat',     p.center_lat,
+                    'center_lon',     p.center_lon,
+                    'pm2_5',          laq.pm2_5,
+                    'pm10',           laq.pm10,
+                    'o3',             laq.o3,
+                    'no2',            laq.no2,
+                    'so2',            laq.so2,
+                    'co',             laq.co,
+                    'us_epa_index',   laq.us_epa_index,
+                    'gb_defra_index', laq.gb_defra_index,
+                    'last_updated',   laq.last_updated
+                )
+            ) AS feature
+            FROM provinces p
+            LEFT JOIN latest_air_quality laq ON p.name = laq.name
+        ) AS features;
+        """
+    )
     
-    features = []
-    for row, geometry_json in results:
-        features.append({
-            "type": "Feature",
-            "properties": {
-                "adm1_name": row.name,
-                "adm1_pcode": row.adm1_pcode,
-                "center_lat": row.center_lat,
-                "center_lon": row.center_lon,
-                "area_sqkm": row.area_sqkm,
-            },
-            "geometry": json.loads(geometry_json),
-        })
-    return {"type": "FeatureCollection", "features": features}
+    result = db.execute(query).scalar()
+    return result
 
 @router.get("/{name}")
 def get_province(name: str, db: Session = Depends(get_db)):
