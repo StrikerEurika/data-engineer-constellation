@@ -53,4 +53,4 @@ lint:
 
 # web dev
 web-dev:
-	npm run dev --app-dir web
+	npm --prefix web run dev
