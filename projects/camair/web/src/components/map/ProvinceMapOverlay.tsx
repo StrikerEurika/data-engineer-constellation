@@ -236,18 +236,26 @@ export function ProvinceMapOverlay({
   if (!geoJsonData || selectedPollutant === "none") return null;
 
   const airQualityByProvince = new Map(
-    airQualityData.map((record) => [normalizeProvinceName(record.name), record]),
+    airQualityData.map((record) => [
+      record.adm1_pcode || normalizeProvinceName(record.name),
+      record,
+    ]),
   );
   const uvByProvince = new Map(
-    uvData.map((record) => [normalizeProvinceName(record.name), record]),
+    uvData.map((record) => [
+      record.adm1_pcode || normalizeProvinceName(record.name),
+      record,
+    ]),
   );
 
   const enrichedGeoJsonData: GeoJsonData = {
     ...geoJsonData,
     features: geoJsonData.features.map((feature) => {
+      const pcode = feature.properties.adm1_pcode;
       const provinceName = normalizeProvinceName(feature.properties.adm1_name);
-      const airQuality = airQualityByProvince.get(provinceName);
-      const uv = uvByProvince.get(provinceName);
+
+      const airQuality = airQualityByProvince.get(pcode) || airQualityByProvince.get(provinceName);
+      const uv = uvByProvince.get(pcode) || uvByProvince.get(provinceName);
 
       return {
         ...feature,

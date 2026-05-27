@@ -21,6 +21,7 @@ class ProvinceBase(BaseModel):
 
 class AirQualityBase(BaseModel):
     id: Optional[int]
+    adm1_pcode: Optional[str] = None
     name: str
     co: Optional[float]
     no2: Optional[float]
@@ -40,6 +41,7 @@ class AirQualityBase(BaseModel):
 
 class WeatherBase(BaseModel):
     id: Optional[int]
+    adm1_pcode: Optional[str] = None
     name: str
     temp_c: Optional[float]
     temp_f: Optional[float]
@@ -74,6 +76,7 @@ class WeatherBase(BaseModel):
 
 class UVBase(BaseModel):
     id: Optional[int]
+    adm1_pcode: Optional[str] = None
     name: str
     uv: Optional[float]
     last_updated: Optional[str]

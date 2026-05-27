@@ -50,6 +50,7 @@ export interface AirQualityData {
 
 export interface AirQualityRecord {
   id: number;
+  adm1_pcode?: string;
   name: string;
   co: number;
   no2: number;

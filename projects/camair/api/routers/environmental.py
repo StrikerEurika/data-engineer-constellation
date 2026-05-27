@@ -12,13 +12,20 @@ import schemas
 router = APIRouter(prefix="/api/v1/realtime-api", tags=["environmental"])
 
 def get_latest_records(db: Session, model: type[Any]) -> list[Any]:
-    """Helper to get DISTINCT ON (name) records ordered by created_at DESC."""
-    # SQLAlchemy doesn't have a direct .distinct('name') for all dialects,
-    # but for Postgres we can use distinct(model.name)
-    return db.query(model).distinct(model.name).order_by(
+    """Helper to get DISTINCT ON (name) records ordered by created_at DESC, joining with provinces to get adm1_pcode."""
+    results = db.query(model, models.Province.adm1_pcode).outerjoin(
+        models.Province, model.name == models.Province.name
+    ).distinct(model.name).order_by(
         model.name, 
         model.created_at_ts.desc()
     ).all()
+    
+    # Map the results to include adm1_pcode in the model instance
+    records = []
+    for record, adm1_pcode in results:
+        record.adm1_pcode = adm1_pcode
+        records.append(record)
+    return records
 
 
 def get_trend_records(
@@ -28,12 +35,21 @@ def get_trend_records(
     hours: int = 24,
 ) -> list[Any]:
     cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=hours)
-    query = db.query(model).filter(model.created_at_ts >= cutoff)
+    query = db.query(model, models.Province.adm1_pcode).outerjoin(
+        models.Province, model.name == models.Province.name
+    ).filter(model.created_at_ts >= cutoff)
 
     if province:
         query = query.filter(model.name == province)
 
-    return query.order_by(model.name, model.created_at_ts.asc()).all()
+    results = query.order_by(model.name, model.created_at_ts.asc()).all()
+    
+    # Map the results to include adm1_pcode in the model instance
+    records = []
+    for record, adm1_pcode in results:
+        record.adm1_pcode = adm1_pcode
+        records.append(record)
+    return records
 
 @router.get("/aqi", response_model=schemas.ApiResponse[schemas.AirQualityBase])
 def get_air_quality(db: Session = Depends(get_db)):
@@ -90,6 +106,7 @@ def get_all_environmental(db: Session = Depends(get_db)):
     for p in provinces:
         combined.append({
             "name": p.name,
+            "adm1_pcode": p.adm1_pcode,
             "lat": p.center_lat,
             "lng": p.center_lon,
             "air_quality": aqi_map.get(p.name),

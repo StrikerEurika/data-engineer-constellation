@@ -30,11 +30,40 @@ const MOCK_RAW: Omit<AirQualityRecord, 'lat' | 'lng'>[] = [
   // { id: 752662, name: 'Pursat',             co: 337.85, no2: 16.35, o3:  68.0, pm2_5: 44.65, pm10: 46.05, so2:  2.95, us_epa_index: 3, gb_defra_index: 5, last_updated: '2026-03-15 04:30', last_updated_epoch: 1773523800, created_at: '2026-03-15T04:45:09.417420+07:00' },
 ];
 
-// Attach coordinates
+const PROVINCE_PCODES: Record<string, string> = {
+  "Banteay Meanchey": "KH01",
+  "Battambang": "KH02",
+  "Kampong Cham": "KH03",
+  "Kampong Chhnang": "KH04",
+  "Kampong Speu": "KH05",
+  "Kampong Thom": "KH06",
+  "Kampot": "KH07",
+  "Kandal": "KH08",
+  "Koh Kong": "KH09",
+  "Kratie": "KH10",
+  "Mondulkiri": "KH11",
+  "Phnom Penh": "KH12",
+  "Preah Vihear": "KH13",
+  "Prey Veng": "KH14",
+  "Pursat": "KH15",
+  "Ratanakiri": "KH16",
+  "Siem Reap": "KH17",
+  "Sihanoukville": "KH18",
+  "Strung Treng": "KH19",
+  "Svay Rieng": "KH20",
+  "Takeo": "KH21",
+  "Oddar Meanchey": "KH22",
+  "Kep": "KH23",
+  "Pailin": "KH24",
+  "Tboung Khmum": "KH25",
+};
+
+// Attach coordinates and PCODEs
 const MOCK_DATA: AirQualityRecord[] = MOCK_RAW.map((r) => {
   const coords = PROVINCE_COORDS[r.name];
   return {
     ...r,
+    adm1_pcode: PROVINCE_PCODES[r.name],
     lat: coords?.[0],
     lng: coords?.[1],
   };
@@ -60,10 +89,15 @@ export async function fetchAirQuality(): Promise<ApiResponse> {
       return { data: MOCK_AIR_QUALITY_DATA };
     }
 
-    // Attach coordinates (the DB doesn't store lat/lng, the frontend knows them)
+    // Attach coordinates and PCodes (the DB doesn't store lat/lng, the frontend knows them)
     const enriched = json.data.map((r) => {
       const coords = PROVINCE_COORDS[r.name];
-      return { ...r, lat: coords?.[0], lng: coords?.[1] };
+      return { 
+        ...r, 
+        adm1_pcode: r.adm1_pcode || PROVINCE_PCODES[r.name],
+        lat: coords?.[0], 
+        lng: coords?.[1] 
+      };
     });
 
     return { data: enriched };
@@ -73,6 +107,7 @@ export async function fetchAirQuality(): Promise<ApiResponse> {
       const coords = PROVINCE_COORDS[r.name];
       return {
         ...r,
+        adm1_pcode: PROVINCE_PCODES[r.name],
         lat: coords?.[0],
         lng: coords?.[1],
       };

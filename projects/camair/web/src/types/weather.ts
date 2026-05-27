@@ -1,5 +1,6 @@
 export interface WeatherRecord {
   id: number;
+  adm1_pcode?: string;
   name: string;
   temp_c: number;
   temp_f: number;
@@ -32,6 +33,7 @@ export interface WeatherRecord {
 
 export interface UVRecord {
   id: number;
+  adm1_pcode?: string;
   name: string;
   uv: number;
   last_updated: string;
@@ -42,6 +44,7 @@ export interface UVRecord {
 
 export interface AirQualityRecord {
   id: number;
+  adm1_pcode?: string;
   name: string;
   co: number;
   no2: number;
