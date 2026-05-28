@@ -23,6 +23,9 @@ seed:
 # ── API ──────────────────────────────────────────────────────────────────────
 
 # Run the FastAPI app (production mode)
+# api-dev-venv:
+# 	.\api.venv\Scripts\activate.ps1
+
 api-run:
 	uv run uvicorn main:app --host 0.0.0.0 --port 8000 --app-dir api
 
