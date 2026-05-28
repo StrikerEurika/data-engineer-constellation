@@ -63,6 +63,8 @@ export function Map({
       <MapContainer
         center={center}
         zoom={zoom}
+        zoomSnap={0.5}
+        zoomDelta={0.5}
         className="z-10 h-full w-full"
         zoomControl={false}
         attributionControl={false}

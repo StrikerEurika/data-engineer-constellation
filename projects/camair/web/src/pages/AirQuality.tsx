@@ -44,7 +44,7 @@ export default function AirQuality() {
 
   const mapRef = useRef<LeafletMap | null>(null);
   const DEFAULT_CENTER: [number, number] = [12.5657, 104.991];
-  const DEFAULT_ZOOM = 7.5;
+  const DEFAULT_ZOOM = 8;
 
   useEffect(() => {
     loadData();

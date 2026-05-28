@@ -47,7 +47,7 @@ const CambodiaAirQualityMap: React.FC<CambodiaAirQualityMapProps> = ({
   airQualityData,
   initialPollutant = "pm2_5",
   center = [12.5657, 104.991],
-  zoom = 6.5,
+  zoom = 8,
 }) => {
   const [selectedPollutant, setSelectedPollutant] =
     useState<PollutantType>(initialPollutant);
