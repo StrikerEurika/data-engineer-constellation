@@ -76,14 +76,6 @@ function ProvinceGeoJSON({
     const name = props?.adm1_name;
     if (!props || !name) return {};
 
-    if (selectedPollutant === "none") {
-      return {
-        fillOpacity: 0,
-        opacity: 0,
-        interactive: false,
-      };
-    }
-
     const value = getNumericProperty(props, pollutantKey);
     const isSelected = selectedProvince === name;
 
@@ -134,14 +126,7 @@ function ProvinceGeoJSON({
     } as L.LeafletEventHandlerFnMap);
   }, []);
 
-  const lastPollutantRef = useRef<PollutantType | "none">("none");
-
   useEffect(() => {
-    const justSwitchedFromNone = lastPollutantRef.current === "none" && selectedPollutant !== "none";
-    lastPollutantRef.current = selectedPollutant;
-
-    if (selectedPollutant === "none") return;
-
     geoJsonRef.current?.eachLayer((layer) => {
       const featureLayer = layer as FeatureLayer;
       if (featureLayer.feature?.properties?.adm1_name === selectedProvince) {
@@ -150,7 +135,7 @@ function ProvinceGeoJSON({
           map.flyToBounds(bounds, {
             padding: [50, 50],
             maxZoom: 10,
-            duration: justSwitchedFromNone ? 1.5 : 0.8,
+            duration: 0.8,
           });
         }
       }
@@ -168,34 +153,32 @@ function ProvinceGeoJSON({
       // Always update style
       featureLayer.setStyle(styleProvince(feature));
 
-      // Only update tooltips and popups if not 'none'
-      if (selectedPollutant !== "none") {
-        const props = feature.properties;
-        const name = props.adm1_name;
-        const value = getNumericProperty(props, pollutantKey);
-        const category = getHealthCategory(value, pollutantKey);
+      const props = feature.properties;
+      const name = props.adm1_name;
+      const value = getNumericProperty(props, pollutantKey);
+      const category = getHealthCategory(value, pollutantKey);
 
-        const tooltipContent = value !== null
-          ? `<div class="p-2 text-sm"><strong>${name}</strong><br/>${config.name}: ${formatMetric(value)} ${config.unit}<br/><span style="color: ${getProvinceColor(value, pollutantKey)}">${category}</span></div>`
-          : `<div class="p-2 text-sm"><strong>${name}</strong><br/>No data</div>`;
-        
-        featureLayer.setTooltipContent(tooltipContent);
+      const tooltipContent = value !== null
+        ? `<div class="p-2 text-sm"><strong>${name}</strong><br/>${config.name}: ${formatMetric(value)} ${config.unit}<br/><span style="color: ${getProvinceColor(value, pollutantKey)}">${category}</span></div>`
+        : `<div class="p-2 text-sm"><strong>${name}</strong><br/>No data</div>`;
 
-        const aqiInfo = getAqiInfo(props.us_epa_index);
-        const updatedAt = pollutantKey === "uv"
-          ? formatDate(props.uv_last_updated ?? props.last_updated)
-          : formatDate(props.last_updated);
-        const selectedMetric = value !== null
-          ? `
+      featureLayer.setTooltipContent(tooltipContent);
+
+      const aqiInfo = getAqiInfo(props.us_epa_index);
+      const updatedAt = pollutantKey === "uv"
+        ? formatDate(props.uv_last_updated ?? props.last_updated)
+        : formatDate(props.last_updated);
+      const selectedMetric = value !== null
+        ? `
             <div style="background: #f8fafc; border-radius: 8px; padding: 8px 10px; margin-bottom: 10px; border: 1px solid #e2e8f0;">
               <span style="color: #64748b; display: block; font-size: 10px;">Selected Layer</span>
               <span style="font-weight: 700; color: ${getProvinceColor(value, pollutantKey)};">${config.name}: ${formatMetric(value)} ${config.unit}</span>
               <span style="display: block; font-size: 11px; color: #64748b;">${category}</span>
             </div>
           `
-          : "";
+        : "";
 
-        const popupContent = `
+      const popupContent = `
           <div style="padding: 8px; min-width: 220px; font-family: inherit;">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
               <strong style="font-size: 14px;">${name}</strong>
@@ -237,8 +220,7 @@ function ProvinceGeoJSON({
             </p>
           </div>
         `;
-        featureLayer.setPopupContent(popupContent);
-      }
+      featureLayer.setPopupContent(popupContent);
     });
   }, [geoJsonData, pollutantKey, selectedPollutant, styleProvince]);
 
@@ -271,6 +253,7 @@ export function ProvinceMapOverlay({
   }, [geoJsonUrl]);
 
   if (!geoJsonData) return null;
+  if (selectedPollutant === "none") return null;
 
   const airQualityByProvince = new Map(
     airQualityData.map((record) => [

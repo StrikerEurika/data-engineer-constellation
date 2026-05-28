@@ -74,14 +74,16 @@ export function Map({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution="&copy; OpenStreetMap contributors"
         />
-        <ProvinceMapOverlay
-          geoJsonUrl={cambodiaGeoJsonUrl}
-          airQualityData={filteredData}
-          uvData={uvData}
-          selectedProvince={selectedProvince}
-          onSelectProvince={onProvinceSelect}
-          selectedPollutant={selectedPollutant}
-        />
+        {selectedPollutant !== "none" && (
+          <ProvinceMapOverlay
+            geoJsonUrl={cambodiaGeoJsonUrl}
+            airQualityData={filteredData}
+            uvData={uvData}
+            selectedProvince={selectedProvince}
+            onSelectProvince={onProvinceSelect}
+            selectedPollutant={selectedPollutant}
+          />
+        )}
       </MapContainer>
     </div>
   );
