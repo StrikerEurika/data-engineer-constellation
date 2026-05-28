@@ -4,7 +4,10 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
 import { fetchAirQuality } from "@/services/airQualityService";
 import { fetchUV, fetchWeather } from "@/services/weatherService";
 import { realTimeService } from "@/services/realTimeService";
-import type { AirQualityRecord, PollutantType } from "@/types/air-quality.types";
+import type {
+  AirQualityRecord,
+  PollutantType,
+} from "@/types/air-quality.types";
 import type { UVRecord, WeatherRecord } from "@/types/weather";
 import {
   ViewOptionsPanel,
@@ -38,7 +41,9 @@ export default function AirQuality() {
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
   const [viewOptionsOpen, setViewOptionsOpen] = useState(false);
   const [viewOptions, setViewOptions] = useState(VIEW_OPTIONS);
-  const [selectedPollutant, setSelectedPollutant] = useState<PollutantType | "none">("none");
+  const [selectedPollutant, setSelectedPollutant] = useState<
+    PollutantType | "none"
+  >("none");
   const [searchQuery, setSearchQuery] = useState("");
   const [isMapReady, setIsMapReady] = useState(false);
 
@@ -48,18 +53,32 @@ export default function AirQuality() {
 
   useEffect(() => {
     loadData();
-    const unsubscribeAQI = realTimeService.subscribe("air_quality", (updated) => {
-      setData(updated as AirQualityRecord[]);
-      setSelectedProvince((prev) => {
-        if (prev && (updated as AirQualityRecord[]).some((r) => r.name === prev)) return prev;
-        const phnomPenh = (updated as AirQualityRecord[]).find((r) => r.name === "Phnom Penh");
-        return phnomPenh ? "Phnom Penh" : (updated as AirQualityRecord[])[0]?.name ?? null;
-      });
-    });
+    const unsubscribeAQI = realTimeService.subscribe(
+      "air_quality",
+      (updated) => {
+        setData(updated as AirQualityRecord[]);
+        setSelectedProvince((prev) => {
+          if (
+            prev &&
+            (updated as AirQualityRecord[]).some((r) => r.name === prev)
+          )
+            return prev;
+          const phnomPenh = (updated as AirQualityRecord[]).find(
+            (r) => r.name === "Phnom Penh",
+          );
+          return phnomPenh
+            ? "Phnom Penh"
+            : ((updated as AirQualityRecord[])[0]?.name ?? null);
+        });
+      },
+    );
 
-    const unsubscribeWeather = realTimeService.subscribe("weather", (updated) => {
-      setWeatherData(updated as WeatherRecord[]);
-    });
+    const unsubscribeWeather = realTimeService.subscribe(
+      "weather",
+      (updated) => {
+        setWeatherData(updated as WeatherRecord[]);
+      },
+    );
     const unsubscribeUV = realTimeService.subscribe("uv", (updated) => {
       setUvData(updated as UVRecord[]);
     });
@@ -77,7 +96,7 @@ export default function AirQuality() {
       const [aqiRes, weatherRes, uvRes] = await Promise.all([
         fetchAirQuality(),
         fetchWeather(),
-        fetchUV()
+        fetchUV(),
       ]);
       setData(aqiRes.data);
       setWeatherData(weatherRes.data);
@@ -104,7 +123,8 @@ export default function AirQuality() {
   };
 
   const selectedRecord = data.find((r) => r.name === selectedProvince) || null;
-  const selectedWeather = weatherData.find((w) => w.name === selectedProvince) || null;
+  const selectedWeather =
+    weatherData.find((w) => w.name === selectedProvince) || null;
   const selectedUV = uvData.find((u) => u.name === selectedProvince) || null;
 
   const filteredData = data.filter((r) =>
@@ -216,10 +236,11 @@ export default function AirQuality() {
           </Card>
         </div>
 
-        <ProvinceDetailsPanel 
-          selectedRecord={selectedRecord} 
+        <ProvinceDetailsPanel
+          selectedRecord={selectedRecord}
           selectedWeather={selectedWeather}
           selectedUV={selectedUV}
+          isLoading={loading}
         />
       </div>
 
