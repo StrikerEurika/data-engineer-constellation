@@ -10,15 +10,6 @@ interface ChartsProps {
   selectedProvince: string | null;
 }
 
-const POLLUTANT_COLORS: Record<string, string> = {
-  'PM2.5': '#f472b6',
-  'PM10':  '#fb923c',
-  'CO':    '#60a5fa',
-  'NO₂':   '#a78bfa',
-  'O₃':    '#34d399',
-  'SO₂':   '#fbbf24',
-};
-
 interface CustomTooltipProps {
   active?: boolean;
   payload?: Array<{ name: string; value: number; payload: { province: string } }>;
@@ -36,7 +27,7 @@ function CustomBarTooltip({ active, payload }: CustomTooltipProps) {
 }
 
 function AqiDistributionChart({ data }: { data: AirQualityRecord[] }) {
-  const counts = Object.entries(AQI_CATEGORIES).map(([idx, info]: [string, any]) => ({
+  const counts = Object.entries(AQI_CATEGORIES).map(([idx, info]) => ({
     label: info.label.split(' ')[0],
     count: data.filter((d) => d.us_epa_index === Number(idx)).length,
     hex:   info.hex,

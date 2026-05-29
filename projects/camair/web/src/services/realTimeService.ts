@@ -1,13 +1,11 @@
-import type { AirQualityRecord } from '../types/air-quality.types';
-
 type MessageType = 'air_quality' | 'weather' | 'uv';
 
 interface RealTimeMessage {
   type: MessageType;
-  data: any[];
+  data: unknown;
 }
 
-type MessageHandler = (data: any) => void;
+type MessageHandler = (data: unknown) => void;
 
 class RealTimeService {
   private ws: WebSocket | null = null;

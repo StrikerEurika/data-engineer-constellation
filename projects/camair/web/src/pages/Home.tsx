@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { 
   Wind, 
   Sun, 
-  Droplets, 
   ChevronRight, 
   CloudRain, 
   Thermometer,
@@ -23,7 +22,6 @@ export default function Home() {
   const [aqiData, setAqiData] = useState<AirQualityRecord[]>([]);
   const [weatherData, setWeatherData] = useState<WeatherRecord[]>([]);
   const [uvData, setUvData] = useState<UVRecord[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
@@ -62,8 +60,6 @@ export default function Home() {
         setUvData(uv.data);
       } catch (err) {
         console.error("Failed to load summary data", err);
-      } finally {
-        setLoading(false);
       }
     };
     loadSummary();
@@ -191,7 +187,15 @@ export default function Home() {
   );
 }
 
-function SummaryCard({ icon, title, value, label, color }: any) {
+interface SummaryCardProps {
+  icon: React.ReactNode;
+  title: string;
+  value: string;
+  label: string;
+  color: string;
+}
+
+function SummaryCard({ icon, title, value, label, color }: SummaryCardProps) {
   return (
     <div className={`${color} backdrop-blur-lg border border-white/20 p-6 rounded-[2rem] space-y-3 hover:scale-105 transition-transform cursor-default`}>
       {icon}
@@ -204,7 +208,14 @@ function SummaryCard({ icon, title, value, label, color }: any) {
   );
 }
 
-function FeatureCard({ icon, title, description, onClick }: any) {
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+}
+
+function FeatureCard({ icon, title, description, onClick }: FeatureCardProps) {
   return (
     <div 
       onClick={onClick}

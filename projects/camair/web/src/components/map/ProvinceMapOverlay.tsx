@@ -87,7 +87,7 @@ function ProvinceGeoJSON({
       fillOpacity: isSelected ? 0.9 : 0.7,
       interactive: true,
     };
-  }, [pollutantKey, selectedProvince, selectedPollutant]);
+  }, [pollutantKey, selectedProvince]);
 
   const styleProvinceRef = useRef(styleProvince);
   useEffect(() => {
@@ -164,7 +164,7 @@ function ProvinceGeoJSON({
 
       featureLayer.setTooltipContent(tooltipContent);
 
-      const aqiInfo = getAqiInfo(props.us_epa_index);
+      const aqiInfo = getAqiInfo(props.us_epa_index ?? 1);
       const updatedAt = pollutantKey === "uv"
         ? formatDate(props.uv_last_updated ?? props.last_updated)
         : formatDate(props.last_updated);
@@ -271,7 +271,7 @@ export function ProvinceMapOverlay({
   const enrichedGeoJsonData: GeoJsonData = {
     ...geoJsonData,
     features: geoJsonData.features.map((feature) => {
-      const pcode = feature.properties.adm1_pcode;
+      const pcode = feature.properties.adm1_pcode || "";
       const provinceName = normalizeProvinceName(feature.properties.adm1_name);
 
       const airQuality = airQualityByProvince.get(pcode) || airQualityByProvince.get(provinceName);

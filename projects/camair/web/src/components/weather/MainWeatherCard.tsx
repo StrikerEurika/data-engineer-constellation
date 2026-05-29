@@ -81,7 +81,7 @@ export function MainWeatherCard({
   );
 }
 
-function WeatherDetail({ icon, label, value, subValue }: { icon: any; label: string; value: string; subValue?: string }) {
+function WeatherDetail({ icon, label, value, subValue }: { icon: React.ReactNode; label: string; value: string; subValue?: string }) {
   return (
     <div className="bg-white/10 dark:bg-white/5 backdrop-blur-md rounded-[1.5rem] p-4 border border-white/10 hover:bg-white/15 transition-all">
       <div className="flex items-center gap-2 text-white/70 text-[10px] uppercase tracking-wider font-bold mb-1.5">
@@ -94,7 +94,7 @@ function WeatherDetail({ icon, label, value, subValue }: { icon: any; label: str
   );
 }
 
-function statusIcon(icon: any) {
+function statusIcon(icon: React.ReactNode) {
   if (typeof icon === 'string') {
     return <span className="text-sm">{icon}</span>;
   }

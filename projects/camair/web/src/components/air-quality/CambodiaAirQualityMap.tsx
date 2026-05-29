@@ -1,5 +1,5 @@
 // components/CambodiaAirQualityMap.tsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { MapContainer, GeoJSON, TileLayer } from "react-leaflet";
 import L, { type LeafletEvent } from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -17,7 +17,7 @@ import {
 } from "@/utils/air-quality.utils";
 
 // Fix Leaflet default icon issues
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
     "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
@@ -56,7 +56,7 @@ const CambodiaAirQualityMap: React.FC<CambodiaAirQualityMapProps> = ({
   const geoJsonRef = useRef<L.GeoJSON | null>(null);
 
   // Style function for GeoJSON layers
-  const styleProvince = (feature: GeoJsonFeature) => {
+  const styleProvince = useCallback((feature: GeoJsonFeature) => {
     const provinceName = feature.properties.adm1_name;
     const provinceData = getProvinceData(provinceName, airQualityData);
     const value = provinceData ? provinceData[selectedPollutant] : null;
@@ -69,10 +69,10 @@ const CambodiaAirQualityMap: React.FC<CambodiaAirQualityMapProps> = ({
       fillOpacity: 0.8,
       dashArray: undefined,
     };
-  };
+  }, [selectedPollutant, airQualityData]);
 
   // Highlight province on hover
-  const highlightProvince = (e: LeafletEvent) => {
+  const highlightProvince = useCallback((e: LeafletEvent) => {
     const layer = e.target as L.GeoJSON;
     layer.setStyle({
       weight: 3,
@@ -80,15 +80,15 @@ const CambodiaAirQualityMap: React.FC<CambodiaAirQualityMapProps> = ({
       fillOpacity: 0.9,
     });
     layer.bringToFront();
-  };
+  }, []);
 
-  const resetHighlight = (e: LeafletEvent) => {
+  const resetHighlight = useCallback((e: LeafletEvent) => {
     const layer = e.target as L.GeoJSON;
     if (geoJsonRef.current) {
       const originalStyle = styleProvince(layer.feature as unknown as GeoJsonFeature);
       layer.setStyle(originalStyle);
     }
-  };
+  }, [styleProvince]);
 
   // On each feature - add interactions
   const onEachProvince = (feature: GeoJsonFeature, layer: L.Layer) => {
@@ -175,7 +175,7 @@ const CambodiaAirQualityMap: React.FC<CambodiaAirQualityMapProps> = ({
         }
       });
     }
-  }, [selectedPollutant, airQualityData]);
+  }, [selectedPollutant, airQualityData, styleProvince]);
 
   return (
     <div className="relative w-full h-[600px] rounded-lg overflow-hidden shadow-lg">
@@ -310,9 +310,9 @@ const CambodiaAirQualityMap: React.FC<CambodiaAirQualityMapProps> = ({
         />
 
         <GeoJSON
-          data={geoJsonData as any}
-          style={styleProvince as any}
-          onEachFeature={onEachProvince as any}
+          data={geoJsonData as unknown as Parameters<typeof GeoJSON>[0]["data"]}
+          style={styleProvince as unknown as Parameters<typeof GeoJSON>[0]["style"]}
+          onEachFeature={onEachProvince as unknown as Parameters<typeof GeoJSON>[0]["onEachFeature"]}
           ref={geoJsonRef}
         />
       </MapContainer>

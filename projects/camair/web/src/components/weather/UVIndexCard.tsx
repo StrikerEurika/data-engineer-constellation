@@ -6,13 +6,6 @@ interface UVIndexCardProps {
   data: UVIndexData[];
 }
 
-const uvColors = {
-  low: '#22c55e',        // green
-  moderate: '#eab308',   // yellow
-  high: '#f97316',       // orange
-  'very-high': '#ef4444', // red
-};
-
 export function UVIndexCard({ data }: UVIndexCardProps) {
   return (
     <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-lg dark:shadow-slate-900/50 transition-colors">

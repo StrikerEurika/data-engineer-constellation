@@ -1,4 +1,4 @@
-import { Search, Sun, Moon, Bell } from 'lucide-react';
+import { Search, Sun, Moon } from 'lucide-react';
 
 interface HeaderProps {
   darkMode: boolean;

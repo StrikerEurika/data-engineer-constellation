@@ -5,8 +5,13 @@ import type { RainChanceData } from '@/types/weather';
 interface RainChanceCardProps {
   data: RainChanceData[];
 }
+interface RainChanceTooltipProps {
+  active?: boolean;
+  payload?: Array<{ value: number }>;
+  label?: string;
+}
 
-const RainChanceTooltip = ({ active, payload, label }: any) => {
+const RainChanceTooltip = ({ active, payload, label }: RainChanceTooltipProps) => {
   if (active && payload && payload.length) {
     const chance = payload[0].value;
     let statusText = "Sunny / Clear";

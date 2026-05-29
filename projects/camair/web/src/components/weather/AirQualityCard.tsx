@@ -6,12 +6,6 @@ interface AirQualityCardProps {
   data: AirQualityData[];
 }
 
-const COLORS = {
-  clean: '#3b82f6',    // blue
-  average: '#94a3b8',  // slate
-  harmful: '#ef4444',  // red
-};
-
 export function AirQualityCard({ data }: AirQualityCardProps) {
   return (
     <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-lg dark:shadow-slate-900/50 transition-colors">

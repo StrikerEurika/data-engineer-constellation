@@ -15,8 +15,13 @@ export interface GeoJsonFeature {
   type: "Feature";
   properties: {
     adm1_name: string;
+    adm1_pcode?: string;
     adm1_name1?: string | null;
-    [key: string]: any;
+    us_epa_index?: number;
+    uv_last_updated?: string;
+    last_updated?: string;
+    uv?: number;
+    [key: string]: unknown;
   };
   geometry: {
     type: string;
