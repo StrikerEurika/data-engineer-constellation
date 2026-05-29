@@ -29,6 +29,33 @@ import {
   CartesianGrid,
 } from "recharts";
 
+const UvTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const uv = payload[0].value;
+    
+    let uvLabel = "Low";
+    let uvColor = "text-green-400";
+    if (uv > 2 && uv <= 5) { uvLabel = "Moderate"; uvColor = "text-yellow-400"; }
+    else if (uv > 5 && uv <= 7) { uvLabel = "High"; uvColor = "text-orange-400"; }
+    else if (uv > 7 && uv <= 10) { uvLabel = "Very High"; uvColor = "text-red-400"; }
+    else if (uv > 10) { uvLabel = "Extreme"; uvColor = "text-purple-400"; }
+
+    return (
+      <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-slate-700/60 dark:border-white/[0.08] p-3.5 rounded-2xl shadow-xl text-white text-xs space-y-2.5">
+        <p className="font-black text-slate-400">Time: {label}</p>
+        <div className="space-y-1.5 font-bold">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-yellow-500" />
+            <span>UV Index: <span className="text-yellow-400">{uv}</span></span>
+          </div>
+          <p className="text-[10px] pl-4 font-black">Level: <span className={uvColor}>{uvLabel}</span></p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function UvDashboard() {
   const navigate = useNavigate();
   const [uvData, setUvData] = useState<UVRecord[]>([]);
@@ -382,7 +409,7 @@ export default function UvDashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" opacity={0.3} />
                   <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} />
                   <YAxis tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} domain={[0, 12]} ticks={[0, 2, 4, 6, 8, 10, 12]} />
-                  <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                  <Tooltip content={<UvTooltip />} />
                   <Bar dataKey="uv" name="UV index" radius={[4, 4, 0, 0]}>
                     {chartData.map((entry, index) => (
                       <Cell

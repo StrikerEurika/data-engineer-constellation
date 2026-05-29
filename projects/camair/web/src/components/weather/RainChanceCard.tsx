@@ -1,10 +1,36 @@
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { Download, MoreVertical } from 'lucide-react';
 import type { RainChanceData } from '@/types/weather';
 
 interface RainChanceCardProps {
   data: RainChanceData[];
 }
+
+const RainChanceTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const chance = payload[0].value;
+    let statusText = "Sunny / Clear";
+    let statusColor = "text-yellow-400";
+    if (chance > 10 && chance <= 30) { statusText = "Cloudy / Overcast"; statusColor = "text-slate-400"; }
+    else if (chance > 30 && chance <= 60) { statusText = "Patchy Rain"; statusColor = "text-blue-300"; }
+    else if (chance > 60 && chance <= 80) { statusText = "Moderate Rain"; statusColor = "text-blue-400"; }
+    else if (chance > 80) { statusText = "Heavy Storm"; statusColor = "text-indigo-400"; }
+
+    return (
+      <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-slate-700/60 dark:border-white/[0.08] p-3.5 rounded-2xl shadow-xl text-white text-xs space-y-2.5">
+        <p className="font-black text-slate-400">Time: {label}</p>
+        <div className="space-y-1.5 font-bold">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-blue-500" />
+            <span>Rain Chance: <span className="text-blue-400">{chance}%</span></span>
+          </div>
+          <p className="text-[10px] pl-4 font-black">Forecast: <span className={statusColor}>{statusText}</span></p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 export function RainChanceCard({ data }: RainChanceCardProps) {
   return (
@@ -45,6 +71,7 @@ export function RainChanceCard({ data }: RainChanceCardProps) {
               domain={[0, 80]}
               ticks={[20, 40, 60, 80]}
             />
+            <Tooltip content={<RainChanceTooltip />} cursor={{ fill: 'rgba(59,130,246,0.05)' }} />
             <Bar dataKey="chance" radius={[6, 6, 0, 0]}>
               {data.map((entry, index) => (
                 <Cell 
@@ -59,3 +86,4 @@ export function RainChanceCard({ data }: RainChanceCardProps) {
     </div>
   );
 }
+

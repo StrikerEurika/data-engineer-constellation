@@ -45,6 +45,98 @@ import {
   CartesianGrid,
 } from "recharts";
 
+const WeatherTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const temp = payload.find((p: any) => p.dataKey === "temp")?.value;
+    const humidity = payload.find((p: any) => p.dataKey === "humidity")?.value;
+    return (
+      <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-slate-700/60 dark:border-white/[0.08] p-3.5 rounded-2xl shadow-xl text-white text-xs space-y-2.5">
+        <p className="font-black text-slate-400">Time: {label}</p>
+        <div className="space-y-1.5 font-bold">
+          {temp !== undefined && (
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-orange-500" />
+              <span>Temp: <span className="text-orange-400">{temp}°C</span></span>
+            </div>
+          )}
+          {humidity !== undefined && (
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500" />
+              <span>Humidity: <span className="text-blue-400">{humidity}%</span></span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const AqiTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const pm2_5 = payload.find((p: any) => p.dataKey === "pm2_5")?.value;
+    const pm10 = payload.find((p: any) => p.dataKey === "pm10")?.value;
+    
+    let pmLevel = "Good";
+    let pmColor = "text-emerald-400";
+    if (pm2_5 > 12 && pm2_5 <= 35.4) { pmLevel = "Moderate"; pmColor = "text-yellow-400"; }
+    else if (pm2_5 > 35.4 && pm2_5 <= 55.4) { pmLevel = "Unhealthy SG"; pmColor = "text-orange-400"; }
+    else if (pm2_5 > 55.4 && pm2_5 <= 150.4) { pmLevel = "Unhealthy"; pmColor = "text-red-400"; }
+    else if (pm2_5 > 150.4) { pmLevel = "Hazardous"; pmColor = "text-purple-400"; }
+
+    return (
+      <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-slate-700/60 dark:border-white/[0.08] p-3.5 rounded-2xl shadow-xl text-white text-xs space-y-2.5">
+        <p className="font-black text-slate-400">Time: {label}</p>
+        <div className="space-y-1.5 font-bold">
+          {pm2_5 !== undefined && (
+            <div className="space-y-0.5">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span>PM2.5: <span className="text-emerald-400">{pm2_5} μg/m³</span></span>
+              </div>
+              <p className="text-[10px] pl-4 font-black">Level: <span className={pmColor}>{pmLevel}</span></p>
+            </div>
+          )}
+          {pm10 !== undefined && (
+            <div className="flex items-center gap-2 pt-1.5 border-t border-slate-800">
+              <span className="w-2 h-2 rounded-full bg-indigo-500" />
+              <span>PM10: <span className="text-indigo-400">{pm10} μg/m³</span></span>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+const UvTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const uv = payload[0].value;
+    
+    let uvLabel = "Low";
+    let uvColor = "text-green-400";
+    if (uv > 2 && uv <= 5) { uvLabel = "Moderate"; uvColor = "text-yellow-400"; }
+    else if (uv > 5 && uv <= 7) { uvLabel = "High"; uvColor = "text-orange-400"; }
+    else if (uv > 7 && uv <= 10) { uvLabel = "Very High"; uvColor = "text-red-400"; }
+    else if (uv > 10) { uvLabel = "Extreme"; uvColor = "text-purple-400"; }
+
+    return (
+      <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-slate-700/60 dark:border-white/[0.08] p-3.5 rounded-2xl shadow-xl text-white text-xs space-y-2.5">
+        <p className="font-black text-slate-400">Time: {label}</p>
+        <div className="space-y-1.5 font-bold">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-yellow-500" />
+            <span>UV Index: <span className="text-yellow-400">{uv}</span></span>
+          </div>
+          <p className="text-[10px] pl-4 font-black">Level: <span className={uvColor}>{uvLabel}</span></p>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
 export default function OverviewDashboard() {
   const navigate = useNavigate();
   const [weatherData, setWeatherData] = useState<WeatherRecord[]>([]);
@@ -562,7 +654,7 @@ export default function OverviewDashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" opacity={0.3} />
                     <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} domain={['dataMin - 1', 'dataMax + 1']} />
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    <Tooltip content={<WeatherTooltip />} />
                     <Line type="monotone" dataKey="temp" name="Temperature (°C)" stroke="#f97316" strokeWidth={3} dot={{ r: 3 }} activeDot={{ r: 6 }} />
                     <Line type="monotone" dataKey="humidity" name="Humidity (%)" stroke="#3b82f6" strokeWidth={2} strokeDasharray="5 5" dot={false} />
                   </LineChart>
@@ -577,7 +669,7 @@ export default function OverviewDashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" opacity={0.3} />
                     <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} />
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    <Tooltip content={<AqiTooltip />} />
                     <Area type="monotone" dataKey="pm2_5" name="PM2.5 (μg/m³)" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorPm)" />
                     <Line type="monotone" dataKey="pm10" name="PM10 (μg/m³)" stroke="#6366f1" strokeWidth={2} dot={false} />
                   </AreaChart>
@@ -586,7 +678,7 @@ export default function OverviewDashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" opacity={0.3} />
                     <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} />
                     <YAxis tick={{ fontSize: 10, fill: '#64748b' }} tickLine={false} domain={[0, 12]} />
-                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }} />
+                    <Tooltip content={<UvTooltip />} />
                     <Bar dataKey="uv" name="UV index" fill="#eab308" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 )}
