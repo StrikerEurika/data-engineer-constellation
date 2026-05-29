@@ -5,7 +5,6 @@ import {
   Cloud, 
   Wind, 
   Droplets, 
-  ShieldAlert, 
   Compass, 
   TrendingUp, 
   Table, 
@@ -28,7 +27,6 @@ import {
 import { fetchAirQuality } from "../services/airQualityService";
 import { realTimeService } from "../services/realTimeService";
 import { getAqiInfo } from "../utils/aqi-utils";
-import { POLLUTANT_CONFIG } from "../config/pollutant.config";
 import type { WeatherRecord, UVRecord, AirQualityRecord } from "../types/weather";
 import { formatToUTC7Time } from "../utils/time";
 import {
@@ -45,10 +43,22 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const WeatherTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadItem {
+  dataKey?: string | number;
+  value: number;
+  payload: Record<string, unknown>;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}
+
+const WeatherTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
-    const temp = payload.find((p: any) => p.dataKey === "temp")?.value;
-    const humidity = payload.find((p: any) => p.dataKey === "humidity")?.value;
+    const temp = payload.find((p) => p.dataKey === "temp")?.value;
+    const humidity = payload.find((p) => p.dataKey === "humidity")?.value;
     return (
       <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-slate-700/60 dark:border-white/[0.08] p-3.5 rounded-2xl shadow-xl text-white text-xs space-y-2.5">
         <p className="font-black text-slate-400">Time: {label}</p>
@@ -72,17 +82,17 @@ const WeatherTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const AqiTooltip = ({ active, payload, label }: any) => {
+const AqiTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
-    const pm2_5 = payload.find((p: any) => p.dataKey === "pm2_5")?.value;
-    const pm10 = payload.find((p: any) => p.dataKey === "pm10")?.value;
+    const pm2_5 = payload.find((p) => p.dataKey === "pm2_5")?.value;
+    const pm10 = payload.find((p) => p.dataKey === "pm10")?.value;
     
     let pmLevel = "Good";
     let pmColor = "text-emerald-400";
-    if (pm2_5 > 12 && pm2_5 <= 35.4) { pmLevel = "Moderate"; pmColor = "text-yellow-400"; }
-    else if (pm2_5 > 35.4 && pm2_5 <= 55.4) { pmLevel = "Unhealthy SG"; pmColor = "text-orange-400"; }
-    else if (pm2_5 > 55.4 && pm2_5 <= 150.4) { pmLevel = "Unhealthy"; pmColor = "text-red-400"; }
-    else if (pm2_5 > 150.4) { pmLevel = "Hazardous"; pmColor = "text-purple-400"; }
+    if (pm2_5 && pm2_5 > 12 && pm2_5 <= 35.4) { pmLevel = "Moderate"; pmColor = "text-yellow-400"; }
+    else if (pm2_5 && pm2_5 > 35.4 && pm2_5 <= 55.4) { pmLevel = "Unhealthy SG"; pmColor = "text-orange-400"; }
+    else if (pm2_5 && pm2_5 > 55.4 && pm2_5 <= 150.4) { pmLevel = "Unhealthy"; pmColor = "text-red-400"; }
+    else if (pm2_5 && pm2_5 > 150.4) { pmLevel = "Hazardous"; pmColor = "text-purple-400"; }
 
     return (
       <div className="bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-md border border-slate-700/60 dark:border-white/[0.08] p-3.5 rounded-2xl shadow-xl text-white text-xs space-y-2.5">
@@ -110,7 +120,7 @@ const AqiTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-const UvTooltip = ({ active, payload, label }: any) => {
+const UvTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const uv = payload[0].value;
     

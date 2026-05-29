@@ -29,7 +29,18 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const UvTooltip = ({ active, payload, label }: any) => {
+interface TooltipPayloadItem {
+  value: number;
+  payload: Record<string, unknown>;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadItem[];
+  label?: string;
+}
+
+const UvTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     const uv = payload[0].value;
     
