@@ -30,6 +30,7 @@ import { realTimeService } from "../services/realTimeService";
 import { getAqiInfo } from "../utils/aqi-utils";
 import { POLLUTANT_CONFIG } from "../config/pollutant.config";
 import type { WeatherRecord, UVRecord, AirQualityRecord } from "../types/weather";
+import { formatToUTC7Time } from "../utils/time";
 import {
   AreaChart,
   Area,
@@ -155,7 +156,7 @@ export default function OverviewDashboard() {
     if (!timestamp) return `T-${index}`;
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) return `T-${index}`;
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return formatToUTC7Time(date);
   };
 
   // Charts data

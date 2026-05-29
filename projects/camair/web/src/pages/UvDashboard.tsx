@@ -17,6 +17,7 @@ import { Header } from "../layout/Header";
 import { fetchUV, fetchUVTrend } from "../services/weatherService";
 import { realTimeService } from "../services/realTimeService";
 import type { UVRecord } from "../types/weather";
+import { formatToUTC7Time } from "../utils/time";
 import {
   BarChart,
   Bar,
@@ -104,7 +105,7 @@ export default function UvDashboard() {
     if (!timestamp) return `T-${index}`;
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) return `T-${index}`;
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return formatToUTC7Time(date);
   };
 
   const chartData = uvTrend.map((record, index) => ({
@@ -265,7 +266,7 @@ export default function UvDashboard() {
                 {uvInfo.label} Risk
               </span>
               <p className="text-xs text-slate-400 mt-4 font-semibold">
-                Updated: {new Date(currentProvinceUV?.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                Updated: {currentProvinceUV ? formatToUTC7Time(new Date(currentProvinceUV.created_at)) : "N/A"}
               </p>
             </div>
 

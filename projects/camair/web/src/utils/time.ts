@@ -52,6 +52,28 @@ function formatToUTC7Intl(date: Date): string {
   }
 }
 
+/**
+ * Format a Date to HH:mm strictly in Cambodia's timezone (UTC+7)
+ */
+function formatToUTC7Time(date: Date): string {
+  if (!(date instanceof Date) || isNaN(date.getTime())) {
+    return "Invalid Time";
+  }
+  try {
+    const formatter = new Intl.DateTimeFormat("en-US", {
+      timeZone: "Asia/Bangkok", // UTC+7
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    return formatter.format(date);
+  } catch (err) {
+    console.error("Intl time format error", err);
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  }
+}
+
 // "Monday, January 15, 2024 at 17:00:00 GMT+7"
 
-export { formatToUTC7, formatToUTC7Intl };
+export { formatToUTC7, formatToUTC7Intl, formatToUTC7Time };
+

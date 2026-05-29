@@ -18,6 +18,7 @@ import type {
   WeatherCity,
   WeatherForecast,
 } from "../types/weather";
+import { formatToUTC7Time } from "../utils/time";
 
 export default function WeatherDashboard() {
   const navigate = useNavigate();
@@ -117,10 +118,7 @@ export default function WeatherDashboard() {
     const date = new Date(timestamp);
     if (Number.isNaN(date.getTime())) return `T-${fallbackIndex}`;
 
-    return date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+    return formatToUTC7Time(date);
   }
 
   function estimateRainChance(record: WeatherRecord): number {
