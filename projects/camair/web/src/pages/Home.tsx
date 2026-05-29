@@ -119,7 +119,7 @@ export default function Home() {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate("/dashboard/weather")}
                   className="border-white/40 bg-white/10 backdrop-blur-md text-white hover:bg-white/20 h-14 px-8 rounded-2xl text-lg font-bold"
                 >
                   View Weather
@@ -172,13 +172,13 @@ export default function Home() {
             icon={<CloudRain className="w-10 h-10 text-indigo-600" />}
             title="Weather Forecasts"
             description="Get accurate weather updates, humidity, and wind speeds for every province in Cambodia."
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/dashboard/weather")}
           />
           <FeatureCard 
             icon={<Sun className="w-10 h-10 text-orange-600" />}
             title="UV Monitoring"
             description="Protect your skin from harmful radiation with our real-time UV index tracking and alerts."
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/dashboard/uv")}
           />
         </div>
 
