@@ -154,9 +154,7 @@ export default function OverviewDashboard() {
   // Helper formatting trends
   const formatTrendLabel = (timestamp: string | undefined, index: number): string => {
     if (!timestamp) return `T-${index}`;
-    const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return `T-${index}`;
-    return formatToUTC7Time(date);
+    return formatToUTC7Time(timestamp);
   };
 
   // Charts data

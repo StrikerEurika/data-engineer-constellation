@@ -53,10 +53,20 @@ function formatToUTC7Intl(date: Date): string {
 }
 
 /**
- * Format a Date to HH:mm strictly in Cambodia's timezone (UTC+7)
+ * Format a Date or String timestamp strictly in Cambodia's timezone (UTC+7).
+ * Safely parses naive database UTC timestamps (appending 'Z') to prevent browser timezone offsets.
  */
-function formatToUTC7Time(date: Date): string {
-  if (!(date instanceof Date) || isNaN(date.getTime())) {
+function formatToUTC7Time(dateOrString: Date | string): string {
+  let date: Date;
+  if (typeof dateOrString === "string") {
+    // If it's an ISO format without timezone suffix (e.g. naive created_at_ts), append 'Z' to treat as UTC
+    const isNaive = dateOrString.includes("T") && !dateOrString.endsWith("Z") && !dateOrString.includes("+");
+    date = new Date(isNaive ? `${dateOrString}Z` : dateOrString);
+  } else {
+    date = dateOrString;
+  }
+
+  if (isNaN(date.getTime())) {
     return "Invalid Time";
   }
   try {
@@ -76,4 +86,5 @@ function formatToUTC7Time(date: Date): string {
 // "Monday, January 15, 2024 at 17:00:00 GMT+7"
 
 export { formatToUTC7, formatToUTC7Intl, formatToUTC7Time };
+
 

@@ -115,10 +115,7 @@ export default function WeatherDashboard() {
 
   function formatTrendLabel(timestamp: string | undefined, fallbackIndex: number): string {
     if (!timestamp) return `T-${fallbackIndex}`;
-    const date = new Date(timestamp);
-    if (Number.isNaN(date.getTime())) return `T-${fallbackIndex}`;
-
-    return formatToUTC7Time(date);
+    return formatToUTC7Time(timestamp);
   }
 
   function estimateRainChance(record: WeatherRecord): number {

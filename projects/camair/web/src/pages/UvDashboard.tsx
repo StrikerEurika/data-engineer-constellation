@@ -103,9 +103,7 @@ export default function UvDashboard() {
 
   const formatTrendLabel = (timestamp: string | undefined, index: number): string => {
     if (!timestamp) return `T-${index}`;
-    const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return `T-${index}`;
-    return formatToUTC7Time(date);
+    return formatToUTC7Time(timestamp);
   };
 
   const chartData = uvTrend.map((record, index) => ({
@@ -266,7 +264,7 @@ export default function UvDashboard() {
                 {uvInfo.label} Risk
               </span>
               <p className="text-xs text-slate-400 mt-4 font-semibold">
-                Updated: {currentProvinceUV ? formatToUTC7Time(new Date(currentProvinceUV.created_at)) : "N/A"}
+                Updated: {currentProvinceUV ? formatToUTC7Time(currentProvinceUV.created_at) : "N/A"}
               </p>
             </div>
 
