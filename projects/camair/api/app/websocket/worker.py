@@ -6,7 +6,7 @@ from app.core.database import SessionLocal
 from app.models import province as province_models
 from app.models import environmental as env_models
 from app.websocket.manager import manager
-from app.core.config import POLL_INTERVAL
+from app.core.config import settings
 
 def get_max_ts(db: Session, model):
     result = db.query(func.max(model.created_at_ts)).scalar()
@@ -62,4 +62,4 @@ async def db_poller():
         finally:
             db.close()
 
-        await asyncio.sleep(POLL_INTERVAL)
+        await asyncio.sleep(settings.DB_POLL_INTERVAL_SECONDS)

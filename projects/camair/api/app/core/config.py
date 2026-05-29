@@ -1,18 +1,25 @@
-import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-DB_CONFIG = {
-    "host": os.getenv("DB_HOST", "localhost"),
-    "port": int(os.getenv("DB_PORT", 5432)),
-    "dbname": os.getenv("DB_NAME", "camair"),
-    "user": os.getenv("DB_USER", "airflow"),
-    "password": os.getenv("DB_PASSWORD", "airflow"),
-}
+class Settings(BaseSettings):
+    # Database Configuration
+    DB_HOST: str = "localhost"
+    DB_PORT: int = 5432
+    DB_NAME: str = "camair"
+    DB_USER: str = "airflow"
+    DB_PASSWORD: str = "airflow"
 
-SQLALCHEMY_DATABASE_URL = (
-    f"postgresql://{DB_CONFIG['user']}:{DB_CONFIG['password']}@"
-    f"{DB_CONFIG['host']}:{DB_CONFIG['port']}/{DB_CONFIG['dbname']}"
-)
+    # Application Settings
+    DB_POLL_INTERVAL_SECONDS: int = 2
 
+    @property
+    def SQLALCHEMY_DATABASE_URL(self) -> str:
+        return f"postgresql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+
+settings = Settings()
+
+# Column configurations (kept for compatibility or internal use)
 AQI_COLS = [
     "id", "name", "co", "no2", "o3", "so2", "pm2_5", "pm10",
     "us_epa_index", "gb_defra_index",
@@ -34,4 +41,6 @@ UV_COLS = [
     "last_updated", "last_updated_epoch", "created_at",
 ]
 
-POLL_INTERVAL = int(os.getenv("DB_POLL_INTERVAL_SECONDS", "2"))
+# Aliases for backward compatibility if needed
+SQLALCHEMY_DATABASE_URL = settings.SQLALCHEMY_DATABASE_URL
+POLL_INTERVAL = settings.DB_POLL_INTERVAL_SECONDS
