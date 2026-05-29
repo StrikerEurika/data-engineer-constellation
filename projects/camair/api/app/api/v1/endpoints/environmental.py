@@ -4,23 +4,22 @@ from typing import Any
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from database import get_db
-import models
-import schemas
+from app.core.database import get_db
+from app.models.province import Province
+from app.models import environmental as env_models
+from app.schemas import environmental as env_schemas
+from app.schemas.common import ApiResponse
 
-# This router provides endpoints
-router = APIRouter(prefix="/api/v1/realtime-api", tags=["environmental"])
+router = APIRouter()
 
 def get_latest_records(db: Session, model: type[Any]) -> list[Any]:
-    """Helper to get DISTINCT ON (name) records ordered by created_at DESC, joining with provinces to get adm1_pcode."""
-    results = db.query(model, models.Province.adm1_pcode).outerjoin(
-        models.Province, model.name == models.Province.name
+    results = db.query(model, Province.adm1_pcode).outerjoin(
+        Province, model.name == Province.name
     ).distinct(model.name).order_by(
         model.name, 
         model.created_at_ts.desc()
     ).all()
     
-    # Map the results to include adm1_pcode in the model instance
     records = []
     for record, adm1_pcode in results:
         record.adm1_pcode = adm1_pcode
@@ -35,8 +34,8 @@ def get_trend_records(
     hours: int = 24,
 ) -> list[Any]:
     cutoff = datetime.now(UTC).replace(tzinfo=None) - timedelta(hours=hours)
-    query = db.query(model, models.Province.adm1_pcode).outerjoin(
-        models.Province, model.name == models.Province.name
+    query = db.query(model, Province.adm1_pcode).outerjoin(
+        Province, model.name == Province.name
     ).filter(model.created_at_ts >= cutoff)
 
     if province:
@@ -44,63 +43,62 @@ def get_trend_records(
 
     results = query.order_by(model.name, model.created_at_ts.asc()).all()
     
-    # Map the results to include adm1_pcode in the model instance
     records = []
     for record, adm1_pcode in results:
         record.adm1_pcode = adm1_pcode
         records.append(record)
     return records
 
-@router.get("/aqi", response_model=schemas.ApiResponse[schemas.AirQualityBase])
+@router.get("/aqi", response_model=ApiResponse[env_schemas.AirQualityBase])
 def get_air_quality(db: Session = Depends(get_db)):
-    return {"data": get_latest_records(db, models.AirQuality)}
+    return {"data": get_latest_records(db, env_models.AirQuality)}
 
 
-@router.get("/aqi/trends", response_model=schemas.ApiResponse[schemas.AirQualityBase])
+@router.get("/aqi/trends", response_model=ApiResponse[env_schemas.AirQualityBase])
 def get_air_quality_trends(
     province: str | None = None,
     hours: int = 24,
     db: Session = Depends(get_db),
 ):
-    return {"data": get_trend_records(db, models.AirQuality, province, hours)}
+    return {"data": get_trend_records(db, env_models.AirQuality, province, hours)}
 
-@router.get("/weather", response_model=schemas.ApiResponse[schemas.WeatherBase])
+@router.get("/weather", response_model=ApiResponse[env_schemas.WeatherBase])
 def get_weather(db: Session = Depends(get_db)):
-    return {"data": get_latest_records(db, models.Weather)}
+    return {"data": get_latest_records(db, env_models.Weather)}
 
 
-@router.get("/weather/trends", response_model=schemas.ApiResponse[schemas.WeatherBase])
+@router.get("/weather/trends", response_model=ApiResponse[env_schemas.WeatherBase])
 def get_weather_trends(
     province: str | None = None,
     hours: int = 24,
     db: Session = Depends(get_db),
 ):
-    return {"data": get_trend_records(db, models.Weather, province, hours)}
+    return {"data": get_trend_records(db, env_models.Weather, province, hours)}
 
-@router.get("/uv", response_model=schemas.ApiResponse[schemas.UVBase])
+@router.get("/uv", response_model=ApiResponse[env_schemas.UVBase])
 def get_uv(db: Session = Depends(get_db)):
-    return {"data": get_latest_records(db, models.UVIndex)}
+    return {"data": get_latest_records(db, env_models.UVIndex)}
 
 
-@router.get("/uv/trends", response_model=schemas.ApiResponse[schemas.UVBase])
+@router.get("/uv/trends", response_model=ApiResponse[env_schemas.UVBase])
 def get_uv_trends(
     province: str | None = None,
     hours: int = 24,
     db: Session = Depends(get_db),
 ):
-    return {"data": get_trend_records(db, models.UVIndex, province, hours)}
+    return {"data": get_trend_records(db, env_models.UVIndex, province, hours)}
 
 @router.get("/all")
 def get_all_environmental(db: Session = Depends(get_db)):
-    aqi_list = get_latest_records(db, models.AirQuality)
-    weather_list = get_latest_records(db, models.Weather)
-    uv_list = get_latest_records(db, models.UVIndex)
+    aqi_list = get_latest_records(db, env_models.AirQuality)
+    weather_list = get_latest_records(db, env_models.Weather)
+    uv_list = get_latest_records(db, env_models.UVIndex)
     
     aqi_map = {r.name: r for r in aqi_list}
     weather_map = {r.name: r for r in weather_list}
     uv_map = {r.name: r for r in uv_list}
 
-    provinces = db.query(models.Province).order_by(models.Province.name).all()
+    provinces = db.query(Province).order_by(Province.name).all()
     
     combined = []
     for p in provinces:

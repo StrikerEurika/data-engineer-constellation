@@ -2,17 +2,17 @@ import asyncio
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 
-from database import SessionLocal
-import models
-from manager import manager
-from config import POLL_INTERVAL
+from app.core.database import SessionLocal
+from app.models import province as province_models
+from app.models import environmental as env_models
+from app.websocket.manager import manager
+from app.core.config import POLL_INTERVAL
 
 def get_max_ts(db: Session, model):
     result = db.query(func.max(model.created_at_ts)).scalar()
     return result.isoformat() if result and hasattr(result, "isoformat") else str(result) if result else None
 
 def fetch_latest_with_coords(db: Session, model, coords_map: dict):
-    # DISTINCT ON (name) ORDER BY name, created_at_ts DESC
     records = db.query(model).distinct(model.name).order_by(
         model.name, 
         model.created_at_ts.desc()
@@ -20,10 +20,7 @@ def fetch_latest_with_coords(db: Session, model, coords_map: dict):
     
     results = []
     for r in records:
-        # Convert SQLAlchemy model to dict for broadcasting
-        # We manually add lat/lng from our coords map
         data = {c.name: getattr(r, c.name) for c in r.__table__.columns}
-        # Handle datetime serialization
         if data.get("created_at_ts") and hasattr(data["created_at_ts"], "isoformat"):
             data["created_at_ts"] = data["created_at_ts"].isoformat()
             
@@ -43,14 +40,13 @@ async def db_poller():
     while True:
         db = SessionLocal()
         try:
-            # Refresh province coords
-            provinces = db.query(models.Province).filter(models.Province.center_lat.isnot(None)).all()
+            provinces = db.query(province_models.Province).filter(province_models.Province.center_lat.isnot(None)).all()
             coords = {p.name: (p.center_lat, p.center_lon) for p in provinces}
 
             for model, key, msg_type in [
-                (models.AirQuality, "air_quality", "air_quality"),
-                (models.Weather, "weather", "weather"),
-                (models.UVIndex, "uv", "uv"),
+                (env_models.AirQuality, "air_quality", "air_quality"),
+                (env_models.Weather, "weather", "weather"),
+                (env_models.UVIndex, "uv", "uv"),
             ]:
                 current_max = get_max_ts(db, model)
                 if current_max and current_max != last_max[key]:

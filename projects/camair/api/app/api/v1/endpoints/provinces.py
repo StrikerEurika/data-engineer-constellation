@@ -2,19 +2,17 @@ import json
 from fastapi import APIRouter, HTTPException, Query, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func, cast, text
-from geoalchemy2 import Geography, Geometry
+from geoalchemy2 import Geography
 from geoalchemy2.functions import ST_AsGeoJSON, ST_Distance, ST_DWithin
 
+from app.core.database import get_db
+from app.models.province import Province
 
-from database import get_db
-import models
-
-router = APIRouter(prefix="/api/v1/provinces", tags=["provinces"])
+router = APIRouter()
 
 @router.get("")
 def list_provinces(db: Session = Depends(get_db)):
-    provinces = db.query(models.Province).order_by(models.Province.name).all()
-    # Manual serialization to avoid geometry issues in default pydantic
+    provinces = db.query(Province).order_by(Province.name).all()
     return {
         "data": [
             {
@@ -29,7 +27,6 @@ def list_provinces(db: Session = Depends(get_db)):
 
 @router.get("/geojson")
 def provinces_geojson(db: Session = Depends(get_db)):
-    # handle geo
     query = text(
         """
         SELECT json_build_object(
@@ -84,9 +81,9 @@ def provinces_geojson(db: Session = Depends(get_db)):
 @router.get("/{name}")
 def get_province(name: str, db: Session = Depends(get_db)):
     result = db.query(
-        models.Province,
-        func.ST_AsGeoJSON(models.Province.geom).label("geometry")
-    ).filter(models.Province.name == name).first()
+        Province,
+        func.ST_AsGeoJSON(Province.geom).label("geometry")
+    ).filter(Province.name == name).first()
     
     if not result:
         raise HTTPException(status_code=404, detail=f"Province '{name}' not found")
@@ -109,25 +106,24 @@ def get_nearby_provinces(
     distance_km: float = Query(50, description="Search radius in kilometres"),
     db: Session = Depends(get_db)
 ):
-    target = db.query(models.Province).filter(models.Province.name == name).first()
+    target = db.query(Province).filter(Province.name == name).first()
     if not target:
         raise HTTPException(status_code=404, detail=f"Province '{name}' not found")
 
-    # Use cast to Geography for accurate distance in meters
     nearby = db.query(
-        models.Province.name,
-        models.Province.adm1_pcode,
-        models.Province.center_lat,
-        models.Province.center_lon,
+        Province.name,
+        Province.adm1_pcode,
+        Province.center_lat,
+        Province.center_lon,
         func.round(func.ST_Distance(
             cast(target.geom, Geography), 
-            cast(models.Province.geom, Geography)
+            cast(Province.geom, Geography)
         ) / 1000).label("distance_km")
     ).filter(
-        models.Province.name != name,
+        Province.name != name,
         func.ST_DWithin(
             cast(target.geom, Geography), 
-            cast(models.Province.geom, Geography), 
+            cast(Province.geom, Geography), 
             distance_km * 1000
         )
     ).order_by("distance_km").all()

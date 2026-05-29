@@ -1,23 +1,6 @@
 from datetime import datetime
-from typing import Generic, Optional, TypeVar
-
+from typing import Optional
 from pydantic import BaseModel
-
-T = TypeVar("T")
-
-
-class ApiResponse(BaseModel, Generic[T]):
-    data: list[T]
-
-class ProvinceBase(BaseModel):
-    adm1_pcode: str
-    name: str
-    center_lat: Optional[float]
-    center_lon: Optional[float]
-    area_sqkm: Optional[float]
-
-    class Config:
-        from_attributes = True
 
 class AirQualityBase(BaseModel):
     id: Optional[int]

@@ -1,20 +1,8 @@
 from sqlalchemy import Column, Integer, String, Float, BigInteger, DateTime, Boolean
-from geoalchemy2 import Geometry
-from database import Base
-
-class Province(Base):
-    __tablename__ = "provinces"
-    adm1_pcode = Column(String, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    center_lat = Column(Float)
-    center_lon = Column(Float)
-    area_sqkm = Column(Float)
-    geom = Column(Geometry('GEOMETRY', srid=4326))
+from app.models.base import Base
 
 class AirQuality(Base):
     __tablename__ = "processed_air_quality"
-    # Using a composite of id and created_at as a workaround if no single PK exists,
-    # but based on SQL, id is present. We'll mark id as PK for SQLAlchemy.
     id = Column(Integer, primary_key=True)
     name = Column(String)
     co = Column(Float)
