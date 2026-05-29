@@ -44,10 +44,37 @@ projects/camair/
 
 ## Quick Start
 
+1. Run the docker-compose file
 ```bash
-# From repo root:
-docker compose down -v
-docker compose up -d --build
+docker compose -f docker-compose.camair.yml up -d --build
+```
+
+2. Run API
+
+Sync the API environment
+```bash
+# synced project environment
+cd api
+uv sync
+```
+
+Activate the Environment
+```bash
+source .venv/Scripts/activate
+```
+
+Run server (from root)
+```bash
+make api-dev # or
+uvicorn api.app.main:app --reload
+```
+
+3. Run Web
+
+Run from Root
+```bash
+make web-dev # or
+cd web && npm run dev
 ```
 
 - Airflow UI: http://localhost:8080 (admin / admin)
