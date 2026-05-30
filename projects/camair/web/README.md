@@ -78,3 +78,5 @@ export default defineConfig([
   * Spark UI: http://localhost:8081 (http://localhost:8081)
   * Airflow UI: http://localhost:8080 (http://localhost:8080)
   * PgAdmin: http://localhost:5050 (http://localhost:5050)
+  * Adminer (Airflow DB): [http://localhost:8085/?pgsql=postgres&username=airflow&db=airflow](http://localhost:8085/?pgsql=postgres&username=airflow&db=airflow) (Password: `airflow`)
+  * Adminer (CamAir DB): [http://localhost:8085/?pgsql=postgres&username=airflow&db=camair](http://localhost:8085/?pgsql=postgres&username=airflow&db=camair) (Password: `airflow`)

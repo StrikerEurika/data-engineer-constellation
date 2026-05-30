@@ -80,6 +80,8 @@ cd web && npm run dev
 - Airflow UI: http://localhost:8080 (admin / admin)
 - FastAPI: http://localhost:8000
 - pgAdmin: http://localhost:5050 (admin@etl.com / admin_etl)
+- Adminer (Airflow DB): [http://localhost:8085/?pgsql=postgres&username=airflow&db=airflow](http://localhost:8085/?pgsql=postgres&username=airflow&db=airflow) (Password: `airflow`)
+- Adminer (CamAir DB): [http://localhost:8085/?pgsql=postgres&username=airflow&db=camair](http://localhost:8085/?pgsql=postgres&username=airflow&db=camair) (Password: `airflow`)
 - Frontend: http://localhost:5173 (run `npm install && npm run dev` in `projects/camair/web/`)
 
 ## Data Flow
