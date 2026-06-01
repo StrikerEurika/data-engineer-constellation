@@ -54,19 +54,19 @@ services:
   # -----------------------------
   # 2.1. PGADMIN
   # -----------------------------
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@etl.com
-      PGADMIN_DEFAULT_PASSWORD: admin_etl
-    ports:
-      - "5050:80"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
+  # pgadmin:
+  #   image: dpage/pgadmin4:latest
+  #   container_name: pgadmin
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@etl.com
+  #     PGADMIN_DEFAULT_PASSWORD: admin_etl
+  #   ports:
+  #     - "5050:80"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #   volumes:
+  #     - pgadmin-data:/var/lib/pgadmin
 
   # -----------------------------
   # 2.2. ADMINER
