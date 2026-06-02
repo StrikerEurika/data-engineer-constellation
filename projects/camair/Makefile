@@ -57,3 +57,18 @@ lint:
 # web dev
 web-dev:
 	npm --prefix web run dev
+
+# --- Docker compose ──────────────────────────────────────────────────────────────────────────────
+# bring all up
+docker-up-all: 
+	docker compose -f docker-compose.camair.yml up -d
+
+# bring all down
+docker-down-all:
+	docker compose -f docker-compose.camair.yml down
+
+# bring up ETL
+docker-up-etl:
+	docker compose -f docker-compose.camair.yml up -d <etl-service-name>
+
+# 
