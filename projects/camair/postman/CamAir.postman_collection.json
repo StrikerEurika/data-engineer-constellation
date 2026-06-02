@@ -1,0 +1,140 @@
+{
+  "info": {
+    "name": "CamAir API",
+    "description": "Postman collection for CamAir FastAPI endpoints (local dev).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "apiPrefix", "value": "/api/v1" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Provinces",
+      "item": [
+        {
+          "name": "GET /provinces",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/provinces" }
+          }
+        },
+        {
+          "name": "GET /provinces/geojson",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/provinces/geojson" }
+          }
+        },
+        {
+          "name": "GET /provinces/:name",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/provinces/:name",
+              "variable": [{ "key": "name", "value": "Phnom Penh" }]
+            }
+          }
+        },
+        {
+          "name": "GET /provinces/:name/nearby",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/provinces/:name/nearby?distance_km=50",
+              "variable": [{ "key": "name", "value": "Phnom Penh" }],
+              "query": [{ "key": "distance_km", "value": "50" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Environmental (realtime-api)",
+      "item": [
+        {
+          "name": "GET /realtime-api/aqi",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/realtime-api/aqi" }
+          }
+        },
+        {
+          "name": "GET /realtime-api/aqi/trends",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/realtime-api/aqi/trends?province=Phnom%20Penh&hours=24",
+              "query": [
+                { "key": "province", "value": "Phnom Penh" },
+                { "key": "hours", "value": "24" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /realtime-api/weather",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/realtime-api/weather" }
+          }
+        },
+        {
+          "name": "GET /realtime-api/weather/trends",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/realtime-api/weather/trends?province=Phnom%20Penh&hours=24",
+              "query": [
+                { "key": "province", "value": "Phnom Penh" },
+                { "key": "hours", "value": "24" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /realtime-api/uv",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/realtime-api/uv" }
+          }
+        },
+        {
+          "name": "GET /realtime-api/uv/trends",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}{{apiPrefix}}/realtime-api/uv/trends?province=Phnom%20Penh&hours=24",
+              "query": [
+                { "key": "province", "value": "Phnom Penh" },
+                { "key": "hours", "value": "24" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "GET /realtime-api/all",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}{{apiPrefix}}/realtime-api/all" }
+          }
+        }
+      ]
+    }
+  ]
+}
