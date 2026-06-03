@@ -1,4 +1,5 @@
 import { MapPin, ChevronDown, Sun, Eye, Wind, Droplets } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface MainWeatherCardProps {
   location: string;
@@ -12,6 +13,7 @@ interface MainWeatherCardProps {
   visibility: number;
   windSpeed: number;
   humidity: number;
+  className?: string;
 }
 
 export function MainWeatherCard({
@@ -26,9 +28,10 @@ export function MainWeatherCard({
   visibility,
   windSpeed,
   humidity,
+  className,
 }: MainWeatherCardProps) {
   return (
-    <div className="bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 rounded-[2.5rem] p-8 relative overflow-hidden min-h-[320px] transition-all duration-500 shadow-xl shadow-blue-500/20 dark:shadow-none border border-white/10">
+    <div className={cn("bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 rounded-3xl p-8 relative overflow-hidden min-h-[320px] h-full flex flex-col justify-between transition-all duration-500 shadow-xl shadow-blue-500/20 dark:shadow-none border border-white/10", className)}>
       {/* Background decoration */}
       <div className="absolute top-0 right-0 w-80 h-80 bg-white/20 dark:bg-blue-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-64 h-64 bg-white/10 dark:cyan-500/10 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2" />

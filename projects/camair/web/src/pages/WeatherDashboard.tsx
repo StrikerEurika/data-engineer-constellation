@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, CloudSun, MapPin } from "lucide-react";
+import { ArrowLeft, CloudSun, MapPin, ListFilter } from "lucide-react";
 import { Header } from "../layout/Header";
 import { MainWeatherCard } from "../components/weather/MainWeatherCard";
 import { WindCard } from "../components/weather/WindCard";
 import { WeatherMap } from "../components/weather/WeatherMap";
 import { RainChanceCard } from "../components/weather/RainChanceCard";
 import { ForecastSection } from "../components/weather/ForecastSection";
+import { Card } from "../components/ui/Card";
+import { cn } from "../lib/utils";
 import {
   fetchWeather,
   fetchWeatherTrend,
@@ -207,9 +209,9 @@ export default function WeatherDashboard() {
       </div>
 
       {/* Main grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
         {/* Main weather card */}
-        <div className="xl:col-span-2">
+        <div className="xl:col-span-2 h-full">
           {currentProvinceWeather && (
             <MainWeatherCard
               location={currentProvinceWeather.name}
@@ -228,7 +230,7 @@ export default function WeatherDashboard() {
         </div>
 
         {/* Wind card */}
-        <div className="xl:col-span-1">
+        <div className="xl:col-span-1 h-full">
           {currentProvinceWeather && (
             <WindCard
               speed={currentProvinceWeather.wind_kph}
@@ -242,45 +244,83 @@ export default function WeatherDashboard() {
       </div>
 
       {/* Second row */}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-6 items-stretch">
         {/* Weather map */}
-        <div className="w-full">
-          <WeatherMap />
+        <div className="w-full h-full">
+          <WeatherMap 
+            weatherData={weatherData}
+            selectedProvince={selectedProvince}
+            onProvinceSelect={setSelectedProvince}
+          />
         </div>
       </div>
 
       {/* Third row - Status Summary & Forecasts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         
         {/* Province list selector */}
-        <div className="lg:col-span-1 bg-white dark:bg-slate-900 rounded-3xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm">
-           <h3 className="text-lg font-bold mb-4 text-slate-800 dark:text-white">Provinces Overview</h3>
-           <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2 custom-scrollbar">
-              {weatherData.map(w => (
-                <div 
-                  key={w.name} 
-                  onClick={() => setSelectedProvince(w.name)}
-                  className={`flex items-center justify-between p-3 rounded-xl cursor-pointer transition-colors ${selectedProvince === w.name ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <img src={w.condition_icon} alt={w.condition_text} className="w-8 h-8" />
-                    <span className="font-medium text-slate-700 dark:text-slate-200">{w.name}</span>
+        <Card glass className="lg:col-span-1 p-6 h-full min-h-[380px] flex flex-col justify-between transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-800">
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                <ListFilter className="w-5 h-5 text-blue-500" />
+                Provinces Overview
+              </h3>
+              <span className="text-[10px] uppercase font-black text-slate-400 dark:text-slate-500 tracking-wider">
+                Live Registry
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+              Live provincial metrics. Click a province to focus dashboard.
+            </p>
+          </div>
+
+          <div className="space-y-2 flex-1 min-h-[220px] max-h-[260px] overflow-y-auto pr-2 custom-scrollbar">
+            {weatherData.map(w => (
+              <div 
+                key={w.name} 
+                onClick={() => setSelectedProvince(w.name)}
+                className={cn(
+                  "flex items-center justify-between p-3 rounded-2xl cursor-pointer transition-all border",
+                  selectedProvince === w.name 
+                    ? "bg-blue-50/50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-800/60 shadow-sm"
+                    : "bg-white/40 dark:bg-slate-900/10 border-slate-100 dark:border-white/[0.02] hover:border-slate-200 dark:hover:border-white/[0.06]"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="relative flex items-center justify-center">
+                    {selectedProvince === w.name && (
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-ping absolute" />
+                    )}
+                    <span className={cn("w-1.5 h-1.5 rounded-full transition-all", selectedProvince === w.name ? "bg-blue-500" : "bg-slate-300 dark:bg-slate-700")} />
                   </div>
-                  <span className="font-bold text-slate-900 dark:text-white">{w.temp_c}°</span>
+                  <div>
+                    <span className="font-bold text-sm text-slate-800 dark:text-slate-200 block">{w.name}</span>
+                    <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 block mt-0.5">{w.condition_text}</span>
+                  </div>
                 </div>
-              ))}
-           </div>
-        </div>
+                <div className="flex items-center gap-2">
+                  <img src={w.condition_icon} alt={w.condition_text} className="w-7 h-7 filter drop-shadow-sm select-none" />
+                  <span className="font-black text-sm text-slate-900 dark:text-white">{w.temp_c}°</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
 
         {/* Rain Chance Card */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 h-full">
           <RainChanceCard data={rainChartData} />
         </div>
 
         {/* Forecast Card */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 h-full">
           {sortedForecastCities.length > 0 && (
-            <ForecastSection cities={sortedForecastCities} />
+            <ForecastSection 
+              cities={sortedForecastCities} 
+              selectedCity={selectedProvince}
+              onCitySelect={setSelectedProvince}
+            />
           )}
         </div>
       </div>

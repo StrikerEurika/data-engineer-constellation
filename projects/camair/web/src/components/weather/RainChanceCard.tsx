@@ -1,9 +1,12 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
-import { Download, MoreVertical } from 'lucide-react';
+import { Download, MoreVertical, CloudRain } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
+import { cn } from '@/lib/utils';
 import type { RainChanceData } from '@/types/weather';
 
 interface RainChanceCardProps {
   data: RainChanceData[];
+  className?: string;
 }
 interface RainChanceTooltipProps {
   active?: boolean;
@@ -37,58 +40,70 @@ const RainChanceTooltip = ({ active, payload, label }: RainChanceTooltipProps) =
   return null;
 };
 
-export function RainChanceCard({ data }: RainChanceCardProps) {
+export function RainChanceCard({ data, className }: RainChanceCardProps) {
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-3xl p-5 shadow-lg dark:shadow-slate-900/50 transition-colors">
+    <Card glass className={cn("p-6 h-full min-h-[380px] flex flex-col justify-between transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-800", className)}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-white">Chance Of Rain</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Cloudy: 0-30% &nbsp; Rain: 60-80% &nbsp; Heavy rain: 80-100%
-          </p>
+      <div>
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            <CloudRain className="w-5 h-5 text-blue-500" />
+            Chance of Rain
+          </h3>
+          <div className="flex items-center gap-1">
+            <button className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-all">
+              <Download className="w-4 h-4" />
+            </button>
+            <button className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-600 dark:hover:text-slate-300 transition-all">
+              <MoreVertical className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300 transition-all">
-            <Download className="w-4 h-4" />
-          </button>
-          <button className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-600 dark:hover:text-slate-300 transition-all">
-            <MoreVertical className="w-4 h-4" />
-          </button>
-        </div>
+        <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+          Cloudy: 0-30% &bull; Rain: 60-80% &bull; Storm: 80-100%
+        </p>
       </div>
 
-      {/* Chart */}
-      <div className="h-40">
+      {/* Chart Container */}
+      <div className="flex-1 min-h-[180px] mt-2">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} barSize={16}>
+          <BarChart data={data} barSize={16} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+            <defs>
+              <linearGradient id="activeRainGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.9}/>
+                <stop offset="95%" stopColor="#2563eb" stopOpacity={0.3}/>
+              </linearGradient>
+              <linearGradient id="inactiveRainGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#93c5fd" stopOpacity={0.6}/>
+                <stop offset="95%" stopColor="#bfdbfe" stopOpacity={0.1}/>
+              </linearGradient>
+            </defs>
             <XAxis 
               dataKey="day" 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 12, fill: '#94a3b8' }}
-              dy={8}
+              tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
+              dy={6}
             />
             <YAxis 
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 12, fill: '#94a3b8' }}
-              domain={[0, 80]}
-              ticks={[20, 40, 60, 80]}
+              tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
+              domain={[0, 100]}
+              ticks={[25, 50, 75, 100]}
             />
-            <Tooltip content={<RainChanceTooltip />} cursor={{ fill: 'rgba(59,130,246,0.05)' }} />
+            <Tooltip content={<RainChanceTooltip />} cursor={{ fill: 'rgba(59,130,246,0.03)' }} />
             <Bar dataKey="chance" radius={[6, 6, 0, 0]}>
-              {data.map((entry, index) => (
+              {data.map((_, index) => (
                 <Cell 
                   key={`cell-${index}`} 
-                  fill={index === 0 ? '#3b82f6' : '#bfdbfe'}
+                  fill={index === 0 ? 'url(#activeRainGrad)' : 'url(#inactiveRainGrad)'}
                 />
               ))}
             </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
+    </Card>
   );
 }
-
