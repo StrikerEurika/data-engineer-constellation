@@ -39,6 +39,7 @@ export default function AirQuality() {
   const [uvData, setUvData] = useState<UVRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
+  const [isUserSelection, setIsUserSelection] = useState(false);
   const [viewOptionsOpen, setViewOptionsOpen] = useState(false);
   const [viewOptions, setViewOptions] = useState(VIEW_OPTIONS);
   const [selectedPollutant, setSelectedPollutant] = useState<
@@ -48,28 +49,29 @@ export default function AirQuality() {
   const [isMapReady, setIsMapReady] = useState(false);
 
   const mapRef = useRef<LeafletMap | null>(null);
+  const selectedProvinceRef = useRef<string | null>(null);
   const DEFAULT_CENTER: [number, number] = [12.5657, 104.991];
   const DEFAULT_ZOOM = 8;
+
+  useEffect(() => {
+    selectedProvinceRef.current = selectedProvince;
+  }, [selectedProvince]);
 
   useEffect(() => {
     loadData();
     const unsubscribeAQI = realTimeService.subscribe(
       "air_quality",
       (updated) => {
-        setData(updated as AirQualityRecord[]);
-        setSelectedProvince((prev) => {
-          if (
-            prev &&
-            (updated as AirQualityRecord[]).some((r) => r.name === prev)
-          )
-            return prev;
-          const phnomPenh = (updated as AirQualityRecord[]).find(
-            (r) => r.name === "Phnom Penh",
-          );
-          return phnomPenh
-            ? "Phnom Penh"
-            : ((updated as AirQualityRecord[])[0]?.name ?? null);
-        });
+        const records = updated as AirQualityRecord[];
+        setData(records);
+        const current = selectedProvinceRef.current;
+        if (current && records.some((r) => r.name === current)) {
+          return;
+        }
+        const phnomPenh = records.find((r) => r.name === "Phnom Penh");
+        const next = phnomPenh ? "Phnom Penh" : (records[0]?.name ?? null);
+        setSelectedProvince(next);
+        setIsUserSelection(false);
       },
     );
 
@@ -104,6 +106,7 @@ export default function AirQuality() {
       const phnomPenh = aqiRes.data.find((r) => r.name === "Phnom Penh");
       if (phnomPenh) {
         setSelectedProvince("Phnom Penh");
+        setIsUserSelection(false);
       }
     } catch (error) {
       console.warn("API unavailable:", error);
@@ -120,6 +123,11 @@ export default function AirQuality() {
 
   const handleApply = () => {
     setViewOptionsOpen(false);
+  };
+
+  const handleProvinceSelect = (name: string) => {
+    setSelectedProvince(name);
+    setIsUserSelection(true);
   };
 
   const selectedRecord = data.find((r) => r.name === selectedProvince) || null;
@@ -209,10 +217,11 @@ export default function AirQuality() {
                 filteredData={filteredData}
                 uvData={uvData}
                 selectedProvince={selectedProvince}
-                onProvinceSelect={setSelectedProvince}
+                onProvinceSelect={handleProvinceSelect}
                 mapRef={mapRef}
                 onMapReady={() => setIsMapReady(true)}
                 selectedPollutant={selectedPollutant}
+                autoZoomEnabled={isUserSelection}
               />
 
               {/* map navigatros  */}
@@ -257,7 +266,7 @@ export default function AirQuality() {
           <ProvinceTable
             data={filteredData}
             selectedProvince={selectedProvince}
-            onSelectProvince={setSelectedProvince}
+            onSelectProvince={handleProvinceSelect}
           />
         </CardContent>
       </Card>

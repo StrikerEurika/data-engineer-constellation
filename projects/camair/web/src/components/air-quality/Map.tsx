@@ -34,9 +34,10 @@ interface MapProps {
   mapRef: React.MutableRefObject<LeafletMap | null>;
   onMapReady: () => void;
   selectedPollutant: PollutantType | "none";
+  autoZoomEnabled: boolean;
 }
 
-export function Map({
+export default function Map({
   center,
   zoom,
   loading,
@@ -47,6 +48,7 @@ export function Map({
   mapRef,
   onMapReady,
   selectedPollutant,
+  autoZoomEnabled,
 }: MapProps) {
   if (loading) {
     return (
@@ -82,6 +84,7 @@ export function Map({
             selectedProvince={selectedProvince}
             onSelectProvince={onProvinceSelect}
             selectedPollutant={selectedPollutant}
+            autoZoomEnabled={autoZoomEnabled}
           />
         )}
       </MapContainer>

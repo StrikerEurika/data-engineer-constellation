@@ -2,7 +2,7 @@ export { AqiGauge } from "./AqiGauge";
 export { default as CambodiaAirQualityMap } from "./CambodiaAirQualityMap";
 export { ChartsPanel } from "./ChartsPanel";
 export { HealthTipsBanner } from "./HealthTipsBanner";
-export { Map } from "./Map";
+export { default as Map } from "./Map";
 export { MapNavigators } from "./MapNavigators";
 export { MapSearchBar } from "./MapSearchBar";
 export { PollutantChart } from "./PollutantChart";

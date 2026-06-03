@@ -26,6 +26,7 @@ interface ProvinceMapOverlayProps {
   selectedProvince: string | null;
   onSelectProvince: (name: string) => void;
   selectedPollutant: PollutantType | "none";
+  autoZoomEnabled: boolean;
 }
 
 function getNumericProperty(
@@ -56,11 +57,13 @@ function ProvinceGeoJSON({
   selectedProvince,
   onSelectProvince,
   selectedPollutant,
+  autoZoomEnabled,
 }: {
   geoJsonData: GeoJsonData;
   selectedProvince: string | null;
   onSelectProvince: (name: string) => void;
   selectedPollutant: PollutantType;
+  autoZoomEnabled: boolean;
 }) {
   const map = useMap();
   const geoJsonRef = useRef<L.GeoJSON | null>(null);
@@ -127,6 +130,7 @@ function ProvinceGeoJSON({
   }, []);
 
   useEffect(() => {
+    if (!autoZoomEnabled || !selectedProvince) return;
     geoJsonRef.current?.eachLayer((layer) => {
       const featureLayer = layer as FeatureLayer;
       if (featureLayer.feature?.properties?.adm1_name === selectedProvince) {
@@ -140,7 +144,7 @@ function ProvinceGeoJSON({
         }
       }
     });
-  }, [selectedProvince, map, selectedPollutant]);
+  }, [autoZoomEnabled, selectedProvince, map]);
 
   useEffect(() => {
     const config = POLLUTANT_CONFIG[pollutantKey] || POLLUTANT_CONFIG.pm2_5;
@@ -242,6 +246,7 @@ export function ProvinceMapOverlay({
   selectedProvince,
   onSelectProvince,
   selectedPollutant,
+  autoZoomEnabled,
 }: ProvinceMapOverlayProps) {
   const [geoJsonData, setGeoJsonData] = useState<GeoJsonData | null>(null);
 
@@ -295,6 +300,7 @@ export function ProvinceMapOverlay({
       selectedProvince={selectedProvince}
       onSelectProvince={onSelectProvince}
       selectedPollutant={selectedPollutant}
+      autoZoomEnabled={autoZoomEnabled}
     />
   );
 }
