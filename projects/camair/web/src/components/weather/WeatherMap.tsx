@@ -237,7 +237,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
     : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
 
   return (
-    <Card glass className={cn("p-6 h-[440px] flex flex-col justify-between transition-all duration-300 relative overflow-hidden", className)}>
+    <Card glass className={cn("p-6 h-[580px] flex flex-col justify-between transition-all duration-300 relative overflow-hidden", className)}>
       
       {/* Map Header Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 z-20 relative">
@@ -316,7 +316,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
             zoom={7.5}
             zoomSnap={0.5}
             zoomDelta={0.5}
-            className="w-full h-full"
+            className="w-full h-full z-10"
             zoomControl={false}
             attributionControl={false}
           >
