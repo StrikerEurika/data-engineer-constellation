@@ -1,4 +1,4 @@
-.PHONY: db-up db-down db-reset seed api-run api-dev etl-fetch etl-fetch-kafka lint
+.PHONY: db-up db-down db-reset seed api-run api-dev etl-fetch etl-fetch-kafka lint web-dev docker-up-all docker-down-all docker-up-etl db-monitors-up db-monitors-down
 
 # ── Database ─────────────────────────────────────────────────────────────────
 
@@ -19,6 +19,16 @@ db-reset: db-down
 # Seed province boundaries from GeoJSON into PostGIS
 seed:
 	uv run python scripts/seed_provinces.py
+
+# ── Docker monitors ──────────────────────────────────────────────────────────────────────
+
+# Start monitors services
+db-monitors-up:
+	docker compose -f docker-compose.camair.yml up -d pgadmin adminer
+
+# Stop monitors services
+db-monitors-down:
+	docker compose -f docker-compose.camair.yml down pgadmin adminer
 
 # ── API ──────────────────────────────────────────────────────────────────────
 
