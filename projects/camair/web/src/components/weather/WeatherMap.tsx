@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import type { Map as LeafletMap, LeafletEvent, PathOptions } from "leaflet";
 import L from "leaflet";
@@ -123,19 +123,7 @@ function MapController({
 export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, className }: WeatherMapProps) {
   const [geoJsonData, setGeoJsonData] = useState<any>(null);
   const [activeMetric, setActiveMetric] = useState<MetricType>("temp_c");
-  const [isDark, setIsDark] = useState(false);
   const mapRef = useRef<LeafletMap | null>(null);
-
-  // Monitor document theme change
-  useEffect(() => {
-    const checkDark = () => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    };
-    checkDark();
-    const observer = new MutationObserver(checkDark);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-    return () => observer.disconnect();
-  }, []);
 
   // Fetch GeoJSON
   useEffect(() => {
@@ -151,64 +139,48 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
     selectProvinceRef.current = onProvinceSelect;
   }, [onProvinceSelect]);
 
-  // Style callback for GeoJSON features
-  const styleFeature = useCallback((feature?: GeoJsonFeature): PathOptions => {
-    const provinceName = feature?.properties?.adm1_name || "";
-    const isSelected = selectedProvince === provinceName;
-    
-    // Find matching record
-    const record = weatherData.find(
-      (w) => w.name.toLowerCase().trim() === provinceName.toLowerCase().trim()
-    );
-    const val = record ? record[activeMetric] : null;
-    const fillColor = getMetricColor(val, activeMetric);
+  const selectedProvinceRef = useRef(selectedProvince);
+  useEffect(() => { selectedProvinceRef.current = selectedProvince; }, [selectedProvince]);
 
+  // O(1) lookup map — like air quality's airQualityByProvince
+  const weatherByProvince = useMemo(() => {
+    const map = new Map<string, WeatherRecord>();
+    weatherData.forEach(w => map.set(w.name.toLowerCase().trim(), w));
+    return map;
+  }, [weatherData]);
+
+  // Enrich GeoJSON with weather data — like ProvinceMapOverlay's enrichment
+  const enrichedGeoJson = useMemo(() => {
+    if (!geoJsonData) return null;
     return {
-      fillColor,
-      weight: isSelected ? 3.5 : 1.2,
-      opacity: 1,
-      color: isSelected ? (isDark ? "#ffffff" : "#0f172a") : (isDark ? "#334155" : "#e2e8f0"),
-      fillOpacity: isSelected ? 0.85 : 0.65,
+      ...geoJsonData,
+      features: geoJsonData.features.map((feature: any) => {
+        const provinceName = (feature.properties.adm1_name || "").toLowerCase().trim();
+        const weather = weatherByProvince.get(provinceName);
+        return {
+          ...feature,
+          properties: {
+            ...feature.properties,
+            ...(weather || {}),
+          },
+        };
+      }),
     };
-  }, [activeMetric, selectedProvince, weatherData, isDark]);
+  }, [geoJsonData, weatherByProvince]);
 
-  // Bind tooltip and click handlers to each province polygon
-  const onEachFeature = useCallback((feature: GeoJsonFeature, layer: L.Layer) => {
-    const provinceName = feature.properties.adm1_name;
-    const record = weatherData.find(
-      (w) => w.name.toLowerCase().trim() === provinceName.toLowerCase().trim()
-    );
+  // Store Leaflet layers for in-place style updates
+  const layerRefs = useRef<L.Layer[]>([]);
 
-    // Setup interactive events
-    layer.on({
-      click: () => {
-        selectProvinceRef.current(provinceName);
-      },
-      mouseover: (e: LeafletEvent) => {
-        const l = e.target as L.Path;
-        l.setStyle({
-          weight: 3,
-          fillOpacity: 0.85,
-          color: isDark ? "#60a5fa" : "#2563eb",
-        });
-      },
-      mouseout: (e: LeafletEvent) => {
-        const l = e.target as any;
-        // Reset to normal style
-        if (l.feature) {
-          l.setStyle(styleFeature(l.feature as GeoJsonFeature));
-        }
-      },
-    });
+  // Build tooltip HTML from enriched feature properties
+  function getTooltipContent(props: Record<string, any>): string {
+    const provinceName = props.adm1_name || "";
+    const tempVal = props.temp_c != null ? `${props.temp_c}°C` : "No Data";
+    const condText = props.condition_text || "";
+    const humVal = props.humidity != null ? `${props.humidity}%` : "No Data";
+    const windVal = props.wind_kph != null ? `${props.wind_kph} km/h ${props.wind_dir || ""}` : "No Data";
+    const precipVal = props.precip_mm != null ? `${props.precip_mm} mm` : "No Data";
 
-    // Content for popup/tooltip
-    const tempVal = record ? `${record.temp_c}°C` : "No Data";
-    const condText = record ? record.condition_text : "";
-    const humVal = record ? `${record.humidity}%` : "No Data";
-    const windVal = record ? `${record.wind_kph} km/h ${record.wind_dir}` : "No Data";
-    const precipVal = record ? `${record.precip_mm} mm` : "No Data";
-
-    const tooltipContent = `
+    return `
       <div class="p-2 font-sans text-xs">
         <div class="font-black text-slate-800 dark:text-white text-sm mb-1">${provinceName}</div>
         <div class="space-y-0.5">
@@ -220,9 +192,71 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
         </div>
       </div>
     `;
+  }
 
-    layer.bindTooltip(tooltipContent, { sticky: true, className: "custom-map-tooltip border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 p-0 shadow-lg" });
-  }, [weatherData, styleFeature, isDark]);
+  // Compute style from enriched feature properties
+  const getProvinceStyle = useCallback((props: Record<string, any> | undefined): PathOptions => {
+    if (!props) return { fillColor: "#94a3b8", fillOpacity: 0.65 };
+
+    const provinceName = props.adm1_name as string;
+    const metric = activeMetric;
+    const val = props[metric] as number | null ?? null;
+    const fillColor = getMetricColor(val, metric);
+    const isSelected = selectedProvince === provinceName;
+
+    return {
+      fillColor,
+      weight: isSelected ? 3.5 : 1.2,
+      opacity: 1,
+      color: isSelected ? "#0f172a" : "#e2e8f0",
+      fillOpacity: isSelected ? 0.85 : 0.65,
+    };
+  }, [activeMetric, selectedProvince]);
+
+  // In-place update of styles + tooltips — like air quality's setTooltipContent effect
+  useEffect(() => {
+    layerRefs.current.forEach((layer: any) => {
+      if (layer.feature) {
+        const props = layer.feature.properties;
+        layer.setStyle(getProvinceStyle(props));
+        layer.setTooltipContent(getTooltipContent(props));
+      }
+    });
+  }, [getProvinceStyle, weatherByProvince]);
+
+  // Static initial style (used during GeoJSON construction)
+  const styleFeature = useCallback((feature?: GeoJsonFeature): PathOptions => {
+    return getProvinceStyle(feature?.properties);
+  }, [getProvinceStyle]);
+
+  // Stable callback — runs once at mount
+  const onEachFeature = useCallback((feature: GeoJsonFeature, layer: L.Layer) => {
+    const provinceName = feature.properties.adm1_name;
+    layerRefs.current.push(layer);
+
+    // Bind empty tooltip initially; effect fills it via setTooltipContent
+    layer.bindTooltip("", { sticky: true, className: "custom-map-tooltip border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 p-0 shadow-lg" });
+
+    layer.on({
+      click: () => {
+        selectProvinceRef.current(provinceName);
+      },
+      mouseover: (e: LeafletEvent) => {
+        const l = e.target as L.Path;
+        l.setStyle({
+          weight: 3,
+          fillOpacity: 0.85,
+          color: "#2563eb",
+        });
+      },
+      mouseout: (e: LeafletEvent) => {
+        const l = e.target as any;
+        if (l.feature) {
+          l.setStyle(getProvinceStyle(l.feature.properties));
+        }
+      },
+    });
+  }, [getProvinceStyle]);
 
   // Recenter map handler
   const handleRecenter = () => {
@@ -231,13 +265,10 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
     }
   };
 
-  // Base Map Tile based on Theme
-  const mapTileUrl = isDark
-    ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png";
+  const mapTileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   return (
-    <Card glass className={cn("p-6 h-[580px] flex flex-col justify-between transition-all duration-300 relative overflow-hidden", className)}>
+    <Card glass className={cn("p-6 h-[750px] flex flex-col justify-between transition-all duration-300 relative overflow-hidden", className)}>
       
       {/* Map Header Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 z-20 relative">
@@ -309,8 +340,8 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
       </div>
 
       {/* Interactive Map Display */}
-      <div className="flex-1 rounded-2xl overflow-hidden relative border border-slate-100 dark:border-white/[0.04] bg-slate-100 dark:bg-slate-900/50 z-10">
-        {geoJsonData ? (
+      <div className="flex-1 rounded-2xl relative border border-slate-100 dark:border-white/[0.04] bg-slate-100 dark:bg-slate-900/50 z-10">
+        <div className="absolute inset-0 overflow-hidden rounded-2xl">
           <MapContainer
             center={[12.5657, 104.991]}
             zoom={7.5}
@@ -322,18 +353,15 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
           >
             <TileLayer url={mapTileUrl} attribution="&copy; CartoDB" />
             <MapController selectedProvince={selectedProvince} geoJsonData={geoJsonData} mapRef={mapRef} />
-            <GeoJSON
-              key={`geojson-${activeMetric}-${isDark}`}
-              data={geoJsonData}
-              style={styleFeature as any}
-              onEachFeature={onEachFeature}
-            />
+            {enrichedGeoJson && (
+              <GeoJSON
+                data={enrichedGeoJson}
+                style={styleFeature as any}
+                onEachFeature={onEachFeature}
+              />
+            )}
           </MapContainer>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-sm font-bold text-slate-400 animate-pulse bg-slate-50 dark:bg-slate-900">
-            Initializing digital weather overlays...
-          </div>
-        )}
+        </div>
 
         {/* Map UI Controls */}
         <button 
