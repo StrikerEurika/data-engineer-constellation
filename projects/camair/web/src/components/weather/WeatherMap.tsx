@@ -91,6 +91,7 @@ function MapController({
   mapRef: React.MutableRefObject<LeafletMap | null>;
 }) {
   const map = useMap();
+  const prevProvince = useRef<string | null>(null);
 
   useEffect(() => {
     mapRef.current = map;
@@ -98,8 +99,14 @@ function MapController({
 
   useEffect(() => {
     if (!selectedProvince || !geoJsonData) return;
+    if (prevProvince.current === null) {
+      prevProvince.current = selectedProvince;
+      return;
+    }
+    if (prevProvince.current === selectedProvince) return;
+
+    prevProvince.current = selectedProvince;
     
-    // Find the feature matching the selected province and fly to bounds
     let targetLayer: any = null;
     map.eachLayer((layer: any) => {
       if (layer.feature && layer.feature.properties && layer.feature.properties.adm1_name === selectedProvince) {
@@ -268,10 +275,10 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
   const mapTileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
   return (
-    <Card glass className={cn("p-6 h-[750px] flex flex-col justify-between transition-all duration-300 relative overflow-hidden", className)}>
+    <Card glass className={cn("p-6 h-[900px] flex flex-col transition-all duration-300 relative", className)}>
       
       {/* Map Header Controls */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 z-20 relative">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 z-20 relative shrink-0">
         <div>
           <h3 className="text-lg font-bold text-slate-800 dark:text-white flex items-center gap-2">
             <CloudRain className="w-5 h-5 text-blue-500" />
@@ -340,7 +347,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
       </div>
 
       {/* Interactive Map Display */}
-      <div className="flex-1 rounded-2xl relative border border-slate-100 dark:border-white/[0.04] bg-slate-100 dark:bg-slate-900/50 z-10">
+      <div className="flex-1 min-h-0 rounded-2xl relative border border-slate-100 dark:border-white/[0.04] bg-slate-100 dark:bg-slate-900/50 z-10">
         <div className="absolute inset-0 overflow-hidden rounded-2xl">
           <MapContainer
             center={[12.5657, 104.991]}
@@ -351,7 +358,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
             zoomControl={false}
             attributionControl={false}
           >
-            <TileLayer url={mapTileUrl} attribution="&copy; CartoDB" />
+            <TileLayer url={mapTileUrl} attribution="&copy; OpenStreetMap contributors" />
             <MapController selectedProvince={selectedProvince} geoJsonData={geoJsonData} mapRef={mapRef} />
             {enrichedGeoJson && (
               <GeoJSON
