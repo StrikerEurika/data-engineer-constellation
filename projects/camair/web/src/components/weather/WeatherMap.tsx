@@ -180,25 +180,17 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
 
   // Build tooltip HTML from enriched feature properties
   function getTooltipContent(props: Record<string, any>): string {
-    const provinceName = props.adm1_name || "";
-    const tempVal = props.temp_c != null ? `${props.temp_c}°C` : "No Data";
+    const provinceName = props.adm1_name || props.name || "";
+    const tempVal = props.temp_c != null ? `${props.temp_c}°C` : "";
     const condText = props.condition_text || "";
-    const humVal = props.humidity != null ? `${props.humidity}%` : "No Data";
-    const windVal = props.wind_kph != null ? `${props.wind_kph} km/h ${props.wind_dir || ""}` : "No Data";
-    const precipVal = props.precip_mm != null ? `${props.precip_mm} mm` : "No Data";
+    const humVal = props.humidity != null ? `${props.humidity}%` : "";
+    const windVal = props.wind_kph != null ? `${props.wind_kph} km/h` : "";
+    const precipVal = props.precip_mm != null ? `${props.precip_mm} mm` : "";
 
-    return `
-      <div class="p-2 font-sans text-xs">
-        <div class="font-black text-slate-800 dark:text-white text-sm mb-1">${provinceName}</div>
-        <div class="space-y-0.5">
-          <div class="flex justify-between gap-4 font-bold"><span class="text-slate-400">Temp:</span> <span class="text-slate-800 dark:text-white">${tempVal}</span></div>
-          ${condText ? `<div class="flex justify-between gap-4 font-bold"><span class="text-slate-400">Condition:</span> <span class="text-slate-600 dark:text-slate-300">${condText}</span></div>` : ""}
-          <div class="flex justify-between gap-4"><span class="text-slate-400">Rainfall:</span> <span class="font-semibold">${precipVal}</span></div>
-          <div class="flex justify-between gap-4"><span class="text-slate-400">Wind:</span> <span class="font-semibold">${windVal}</span></div>
-          <div class="flex justify-between gap-4"><span class="text-slate-400">Humidity:</span> <span class="font-semibold">${humVal}</span></div>
-        </div>
-      </div>
-    `;
+    const items = [tempVal, condText, humVal, windVal, precipVal].filter(Boolean);
+    const detail = items.length ? ` (${items.join(", ")})` : "";
+
+    return provinceName + detail;
   }
 
   // Compute style from enriched feature properties
@@ -220,16 +212,14 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
     };
   }, [activeMetric, selectedProvince]);
 
-  // In-place update of styles + tooltips — like air quality's setTooltipContent effect
+  // In-place update of styles when metric/selection changes
   useEffect(() => {
     layerRefs.current.forEach((layer: any) => {
       if (layer.feature) {
-        const props = layer.feature.properties;
-        layer.setStyle(getProvinceStyle(props));
-        layer.setTooltipContent(getTooltipContent(props));
+        layer.setStyle(getProvinceStyle(layer.feature.properties));
       }
     });
-  }, [getProvinceStyle, weatherByProvince]);
+  }, [getProvinceStyle]);
 
   // Static initial style (used during GeoJSON construction)
   const styleFeature = useCallback((feature?: GeoJsonFeature): PathOptions => {
@@ -241,8 +231,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
     const provinceName = feature.properties.adm1_name;
     layerRefs.current.push(layer);
 
-    // Bind empty tooltip initially; effect fills it via setTooltipContent
-    layer.bindTooltip("", { sticky: true, className: "custom-map-tooltip border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950 p-0 shadow-lg" });
+    layer.bindTooltip(getTooltipContent(feature.properties), { sticky: true, direction: "top" });
 
     layer.on({
       click: () => {
