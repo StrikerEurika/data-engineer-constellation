@@ -7,6 +7,8 @@ import { WindCard } from "../components/weather/wind-card";
 import { WeatherMap } from "../components/weather/weather-map";
 import { RainChanceCard } from "../components/weather/rain-chance-card";
 import { ForecastSection } from "../components/weather/forecast-section";
+import { TemperatureTrendCard } from "../components/weather/temperature-trend-card";
+import { AtmosphericTrendsCard } from "../components/weather/atmospheric-trends-card";
 import { Card } from "../components/ui/card";
 import { cn } from "../lib/utils";
 import {
@@ -166,8 +168,184 @@ export default function WeatherDashboard() {
   });
 
   if (loading && !weatherData.length) {
-    return <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-950">Loading weather dashboard data...</div>;
+    return (
+      <div className="space-y-6 animate-pulse">
+        <Header darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+
+        {/* Back navigation & Page title */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800" />
+            <div className="space-y-2">
+              <div className="h-7 w-56 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+              <div className="h-4 w-96 max-w-full bg-slate-200 dark:bg-slate-800 rounded-lg" />
+            </div>
+          </div>
+          <div className="w-32 h-10 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+        </div>
+
+        {/* Main grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 items-stretch">
+          {/* Main weather card skeleton */}
+          <div className="xl:col-span-2 h-[380px]">
+            <Card glass className="p-6 h-full flex flex-col justify-between">
+              <div className="space-y-4 flex-1">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-3">
+                    <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                    <div className="h-14 w-36 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                    <div className="h-4 w-44 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                  </div>
+                  <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800 rounded-2xl animate-pulse" />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t border-slate-100 dark:border-white/[0.04]">
+                  {[...Array(4)].map((_, i) => (
+                    <div key={i} className="space-y-2">
+                      <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                      <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Wind card skeleton */}
+          <div className="xl:col-span-1 h-[380px]">
+            <Card glass className="p-6 h-full flex flex-col justify-between">
+              {/* Title */}
+              <div className="flex items-center justify-between">
+                <div className="h-5 w-28 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                <div className="h-3.5 w-16 bg-slate-200 dark:bg-slate-800 rounded-md" />
+              </div>
+
+              {/* Middle row */}
+              <div className="flex items-center gap-6 my-auto py-4 flex-1">
+                {/* Speed display skeleton */}
+                <div className="flex-1 space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex items-baseline gap-1">
+                      <div className="h-10 w-16 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+                      <div className="h-4 w-8 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    </div>
+                    <div className="h-3.5 w-24 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                  </div>
+                  <div className="h-8 w-28 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                </div>
+
+                {/* Compass circle skeleton */}
+                <div className="w-28 h-28 rounded-full bg-slate-200/50 dark:bg-slate-800/50 border border-slate-200/30 dark:border-white/[0.02] flex-shrink-0 animate-pulse" />
+              </div>
+
+              {/* Wind details skeleton */}
+              <div className="pt-4 border-t border-slate-100 dark:border-white/[0.04] grid grid-cols-3 gap-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="space-y-1.5">
+                    <div className="h-3 w-12 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    <div className="h-4 w-16 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Second row (Weather Map skeleton) */}
+        <div className="grid grid-cols-1 gap-6">
+          <div className="w-full h-[500px]">
+            <Card glass className="p-6 h-full flex flex-col">
+              <div className="flex justify-between items-center mb-6 shrink-0">
+                <div className="space-y-2">
+                  <div className="h-5 w-56 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                  <div className="h-3.5 w-80 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                </div>
+                <div className="h-10 w-64 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+              </div>
+              <div className="flex-1 bg-slate-100 dark:bg-slate-900/50 rounded-2xl border border-slate-200/50 dark:border-white/[0.04]" />
+            </Card>
+          </div>
+        </div>
+
+        {/* Third row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
+          {/* Provinces Overview skeleton */}
+          <Card glass className="p-6 h-[400px] flex flex-col">
+            <div className="space-y-3 shrink-0 mb-4">
+              <div className="h-5 w-36 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+              <div className="h-3.5 w-60 bg-slate-200 dark:bg-slate-800 rounded-md" />
+            </div>
+            <div className="space-y-2.5 flex-1 overflow-hidden">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex justify-between items-center p-3 border border-slate-100 dark:border-white/[0.02] rounded-2xl bg-white/40 dark:bg-slate-900/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700" />
+                    <div className="space-y-1.5">
+                      <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                      <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    </div>
+                  </div>
+                  <div className="h-6 w-12 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                </div>
+              ))}
+            </div>
+          </Card>
+
+          {/* Rain Chance skeleton */}
+          <Card glass className="p-6 h-[400px] flex flex-col justify-between">
+            <div className="space-y-4 flex-1">
+              <div className="space-y-2">
+                <div className="h-5 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                <div className="h-3.5 w-48 bg-slate-200 dark:bg-slate-800 rounded-md" />
+              </div>
+              <div className="flex-1 bg-slate-100 dark:bg-slate-900/30 rounded-2xl border border-slate-200/30 dark:border-white/[0.02] mt-4" />
+            </div>
+          </Card>
+
+          {/* Forecast skeleton */}
+          <Card glass className="p-6 h-[400px] flex flex-col justify-between">
+            <div className="space-y-4 flex-1">
+              <div className="space-y-2">
+                <div className="h-5 w-32 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                <div className="h-3.5 w-48 bg-slate-200 dark:bg-slate-800 rounded-md" />
+              </div>
+              <div className="space-y-4 mt-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex justify-between items-center">
+                    <div className="h-4 w-12 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    <div className="h-6 w-10 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                    <div className="h-4 w-12 bg-slate-200 dark:bg-slate-800 rounded-md" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Fourth row skeleton - Detailed Trend Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          <Card glass className="p-6 h-[380px] flex flex-col justify-between">
+            <div className="space-y-4 flex-1">
+              <div className="space-y-2">
+                <div className="h-5 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+                <div className="h-3.5 w-72 bg-slate-200 dark:bg-slate-800 rounded-md animate-pulse" />
+              </div>
+              <div className="flex-1 bg-slate-100 dark:bg-slate-900/30 rounded-2xl border border-slate-200/30 dark:border-white/[0.02] mt-4 animate-pulse" />
+            </div>
+          </Card>
+          <Card glass className="p-6 h-[380px] flex flex-col justify-between">
+            <div className="space-y-4 flex-1">
+              <div className="space-y-2">
+                <div className="h-5 w-48 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse" />
+                <div className="h-3.5 w-72 bg-slate-200 dark:bg-slate-800 rounded-md animate-pulse" />
+              </div>
+              <div className="flex-1 bg-slate-100 dark:bg-slate-900/30 rounded-2xl border border-slate-200/30 dark:border-white/[0.02] mt-4 animate-pulse" />
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
   }
+
 
   return (
     <div className="space-y-6">
@@ -238,6 +416,7 @@ export default function WeatherDashboard() {
               directionDegrees={currentProvinceWeather.wind_degree}
               change={0}
               timeAgo={getTimeAgo(currentProvinceWeather.created_at)}
+              gustSpeed={currentProvinceWeather.gust_kph}
             />
           )}
         </div>
@@ -323,6 +502,12 @@ export default function WeatherDashboard() {
             />
           )}
         </div>
+      </div>
+
+      {/* Fourth row - Detailed Trend Analytics */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+        <TemperatureTrendCard data={trendWeatherSource} />
+        <AtmosphericTrendsCard data={trendWeatherSource} />
       </div>
     </div>
   );

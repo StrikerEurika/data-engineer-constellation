@@ -7,4 +7,7 @@ export { WeatherMap } from "./weather-map";
 export { AirQualityCard } from "./air-quality-card";
 export { RainChanceCard } from "./rain-chance-card";
 export { UVIndexCard } from "./uv-index-card";
+export { TemperatureTrendCard } from "./temperature-trend-card";
+export { AtmosphericTrendsCard } from "./atmospheric-trends-card";
 export { default as WeatherDashboard } from "../../pages/weather-dashboard";
+
