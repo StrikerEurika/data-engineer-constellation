@@ -437,6 +437,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
             <MapController selectedProvince={selectedProvince} geoJsonData={geoJsonData} mapRef={mapRef} />
             {enrichedGeoJson && (
               <GeoJSON
+                key={weatherData.map(w => w.last_updated || w.created_at || "").join(",")}
                 ref={geoJsonRef}
                 data={enrichedGeoJson}
                 style={styleFeature as StyleFunction}

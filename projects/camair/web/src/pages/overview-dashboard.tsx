@@ -208,7 +208,7 @@ export default function OverviewDashboard() {
 
   useEffect(() => {
     loadProvinceTrends(selectedProvince);
-  }, [selectedProvince]);
+  }, [selectedProvince, weatherData, uvData, aqiData]);
 
   const loadData = async () => {
     setLoading(true);

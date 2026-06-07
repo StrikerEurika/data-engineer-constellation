@@ -67,7 +67,7 @@ export default function WeatherDashboard() {
 
   useEffect(() => {
     loadProvinceTrends(selectedProvince);
-  }, [selectedProvince]);
+  }, [selectedProvince, weatherData]);
 
   const loadData = async () => {
     setLoading(true);

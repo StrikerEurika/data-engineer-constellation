@@ -228,9 +228,13 @@ function ProvinceGeoJSON({
     });
   }, [geoJsonData, pollutantKey, selectedPollutant, styleProvince]);
 
+  const dataChecksum = geoJsonData.features
+    .map((f) => `${f.properties.adm1_name}:${f.properties[selectedPollutant] ?? ""}`)
+    .join(",");
+
   return (
     <GeoJSON
-      key="province-geojson-layer"
+      key={`${selectedPollutant}-${selectedProvince}-${dataChecksum}`}
       data={geoJsonData}
       style={styleProvince as L.StyleFunction}
       onEachFeature={onEachProvince as L.GeoJSONOptions["onEachFeature"]}

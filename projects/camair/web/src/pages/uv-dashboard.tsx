@@ -111,7 +111,7 @@ export default function UvDashboard() {
 
   useEffect(() => {
     loadProvinceTrends(selectedProvince);
-  }, [selectedProvince]);
+  }, [selectedProvince, uvData]);
 
   const loadData = async () => {
     setLoading(true);
