@@ -45,13 +45,13 @@ interface GeoJsonData {
 
 function getTempColor(val: number | null): string {
   if (val === null) return "#94a3b8";
-  if (val <= 24) return "#3b82f6"; // Cool blue
-  if (val <= 27) return "#60a5fa"; // Light blue
-  if (val <= 30) return "#fef08a"; // Soft yellow
-  if (val <= 32) return "#facc15"; // Warm yellow
-  if (val <= 34) return "#f97316"; // Orange
-  if (val <= 36) return "#ea580c"; // Dark orange
-  return "#dc2626"; // Red
+  if (val <= 24) return "#dbeafe"; // Soft cool blue
+  if (val <= 27) return "#f1f5f9"; // Neutral transition
+  if (val <= 30) return "#ffedd5"; // Soft cream
+  if (val <= 32) return "#fed7aa"; // Soft peach
+  if (val <= 34) return "#fdba74"; // Soft orange
+  if (val <= 36) return "#f97316"; // Warm orange
+  return "#ef4444"; // Crimson red
 }
 
 function getPrecipColor(val: number | null): string {
@@ -59,28 +59,28 @@ function getPrecipColor(val: number | null): string {
   if (val === 0) return "#f8fafc"; // No rain (off-white)
   if (val <= 0.5) return "#e0f2fe"; // Very light drizzle
   if (val <= 2) return "#bae6fd"; // Light rain
-  if (val <= 5) return "#7dd3fc"; // Moderate rain
-  if (val <= 10) return "#2563eb"; // Heavy rain
-  return "#1e3a8a"; // Severe storm / high precip
+  if (val <= 5) return "#93c5fd"; // Moderate rain (soft blue)
+  if (val <= 10) return "#60a5fa"; // Heavy rain (medium blue)
+  return "#2563eb"; // High precip (royal blue)
 }
 
 function getWindColor(val: number | null): string {
   if (val === null) return "#94a3b8";
-  if (val <= 5) return "#f0fdf4"; // Calm
-  if (val <= 10) return "#bbf7d0"; // Light breeze
-  if (val <= 18) return "#4ade80"; // Moderate wind
-  if (val <= 25) return "#06b6d4"; // Fresh breeze
-  if (val <= 35) return "#3b82f6"; // Strong wind
-  return "#7c3aed"; // Gale
+  if (val <= 5) return "#f0fdfb"; // Calm (very pale teal)
+  if (val <= 10) return "#ccfbf1"; // Light breeze (very light teal)
+  if (val <= 18) return "#99f6e4"; // Moderate wind (light teal)
+  if (val <= 25) return "#5eead4"; // Fresh breeze (medium teal)
+  if (val <= 35) return "#0d9488"; // Strong wind (dark teal)
+  return "#115e59"; // Gale (deep teal-green)
 }
 
 function getHumidityColor(val: number | null): string {
   if (val === null) return "#94a3b8";
-  if (val <= 45) return "#fffbeb"; // Dry
-  if (val <= 60) return "#e0f2fe"; // Comfortable
-  if (val <= 75) return "#7dd3fc"; // Moderately humid
-  if (val <= 85) return "#0284c7"; // Humid
-  return "#0369a1"; // Very humid
+  if (val <= 45) return "#f8fafc"; // Dry (clean slate-50)
+  if (val <= 60) return "#e0e7ff"; // Comfortable (indigo-100)
+  if (val <= 75) return "#c7d2fe"; // Moderately humid (indigo-200)
+  if (val <= 85) return "#818cf8"; // Humid (indigo-400)
+  return "#4f46e5"; // Very humid (indigo-600)
 }
 
 function getMetricColor(val: number | null, metric: MetricType): string {
@@ -385,7 +385,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
             className={cn(
               "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
               activeMetric === "wind_kph" 
-                ? "bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm" 
+                ? "bg-white dark:bg-slate-800 text-teal-600 dark:text-teal-400 shadow-sm" 
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             )}
           >
@@ -398,7 +398,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
             className={cn(
               "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
               activeMetric === "humidity" 
-                ? "bg-white dark:bg-slate-800 text-teal-600 dark:text-teal-400 shadow-sm" 
+                ? "bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-sm" 
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
             )}
           >
@@ -473,12 +473,13 @@ function LegendOverlay({ metric }: { metric: MetricType }) {
           title: "Temp",
           unit: "°C",
           scale: [
-            { label: "<24", color: "#3b82f6" },
-            { label: "27", color: "#60a5fa" },
-            { label: "30", color: "#fef08a" },
-            { label: "32", color: "#facc15" },
-            { label: "34", color: "#f97316" },
-            { label: ">36", color: "#dc2626" },
+            { label: "<24", color: "#dbeafe" },
+            { label: "27", color: "#f1f5f9" },
+            { label: "30", color: "#ffedd5" },
+            { label: "32", color: "#fed7aa" },
+            { label: "34", color: "#fdba74" },
+            { label: "36", color: "#f97316" },
+            { label: ">36", color: "#ef4444" },
           ]
         };
       case "precip_mm":
@@ -489,9 +490,9 @@ function LegendOverlay({ metric }: { metric: MetricType }) {
             { label: "0", color: "#f8fafc" },
             { label: "0.5", color: "#e0f2fe" },
             { label: "2", color: "#bae6fd" },
-            { label: "5", color: "#7dd3fc" },
-            { label: "10", color: "#2563eb" },
-            { label: ">10", color: "#1e3a8a" },
+            { label: "5", color: "#93c5fd" },
+            { label: "10", color: "#60a5fa" },
+            { label: ">10", color: "#2563eb" },
           ]
         };
       case "wind_kph":
@@ -499,12 +500,12 @@ function LegendOverlay({ metric }: { metric: MetricType }) {
           title: "Wind",
           unit: "km/h",
           scale: [
-            { label: "5", color: "#f0fdf4" },
-            { label: "10", color: "#bbf7d0" },
-            { label: "18", color: "#4ade80" },
-            { label: "25", color: "#06b6d4" },
-            { label: "35", color: "#3b82f6" },
-            { label: ">35", color: "#7c3aed" },
+            { label: "5", color: "#f0fdfb" },
+            { label: "10", color: "#ccfbf1" },
+            { label: "18", color: "#99f6e4" },
+            { label: "25", color: "#5eead4" },
+            { label: "35", color: "#0d9488" },
+            { label: ">35", color: "#115e59" },
           ]
         };
       case "humidity":
@@ -512,11 +513,11 @@ function LegendOverlay({ metric }: { metric: MetricType }) {
           title: "Humidity",
           unit: "%",
           scale: [
-            { label: "45", color: "#fffbeb" },
-            { label: "60", color: "#e0f2fe" },
-            { label: "75", color: "#7dd3fc" },
-            { label: "85", color: "#0284c7" },
-            { label: ">85", color: "#0369a1" },
+            { label: "45", color: "#f8fafc" },
+            { label: "60", color: "#e0e7ff" },
+            { label: "75", color: "#c7d2fe" },
+            { label: "85", color: "#818cf8" },
+            { label: ">85", color: "#4f46e5" },
           ]
         };
     }
