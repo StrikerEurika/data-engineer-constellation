@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
-import type { Map as LeafletMap, LeafletEvent, PathOptions } from "leaflet";
+import type { Map as LeafletMap, LeafletEvent, PathOptions, StyleFunction } from "leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { Thermometer, CloudRain, Wind, Droplets, Target } from "lucide-react";
+import { Thermometer, CloudRain, Wind, Droplets, Target, Map as MapIcon } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { cn } from "@/lib/utils";
 import type { WeatherRecord } from "@/types/weather";
@@ -16,16 +16,29 @@ interface WeatherMapProps {
   className?: string;
 }
 
-type MetricType = "temp_c" | "precip_mm" | "wind_kph" | "humidity";
+type MetricType = "temp_c" | "precip_mm" | "wind_kph" | "humidity" | "plain";
+
+interface WeatherProvinceProperties {
+  adm1_name: string;
+  adm1_pcode?: string;
+  name?: string;
+  temp_c?: number;
+  precip_mm?: number;
+  wind_kph?: number;
+  humidity?: number;
+  condition_text?: string;
+  [key: string]: unknown;
+}
 
 interface GeoJsonFeature {
   type: string;
-  properties: {
-    adm1_name: string;
-    adm1_pcode?: string;
-    [key: string]: any;
-  };
-  geometry: any;
+  properties: WeatherProvinceProperties;
+  geometry: unknown;
+}
+
+interface GeoJsonData {
+  type: "FeatureCollection";
+  features: GeoJsonFeature[];
 }
 
 // ── Color Scales ──────────────────────────────────────────────────────────
@@ -76,6 +89,7 @@ function getMetricColor(val: number | null, metric: MetricType): string {
     case "precip_mm": return getPrecipColor(val);
     case "wind_kph": return getWindColor(val);
     case "humidity": return getHumidityColor(val);
+    case "plain": return "#e2e8f0"; // Neutral slate-200 fill color
   }
 }
 
@@ -87,7 +101,7 @@ function MapController({
   mapRef,
 }: {
   selectedProvince: string;
-  geoJsonData: any;
+  geoJsonData: GeoJsonData | null;
   mapRef: React.MutableRefObject<LeafletMap | null>;
 }) {
   const map = useMap();
@@ -107,20 +121,24 @@ function MapController({
 
     prevProvince.current = selectedProvince;
     
-    let targetLayer: any = null;
-    map.eachLayer((layer: any) => {
-      if (layer.feature && layer.feature.properties && layer.feature.properties.adm1_name === selectedProvince) {
-        targetLayer = layer;
+    let targetLayer: (L.Layer & { feature?: GeoJsonFeature }) | null = null;
+    map.eachLayer((layer) => {
+      const featureLayer = layer as L.Layer & { feature?: GeoJsonFeature };
+      if (featureLayer.feature?.properties?.adm1_name === selectedProvince) {
+        targetLayer = featureLayer;
       }
     });
 
-    if (targetLayer && typeof targetLayer.getBounds === "function") {
-      const bounds = targetLayer.getBounds();
-      map.flyToBounds(bounds, {
-        padding: [40, 40],
-        maxZoom: 9.5,
-        duration: 0.8,
-      });
+    if (targetLayer) {
+      const featureGroup = targetLayer as L.FeatureGroup;
+      if (typeof featureGroup.getBounds === "function") {
+        const bounds = featureGroup.getBounds();
+        map.flyToBounds(bounds, {
+          padding: [40, 40],
+          maxZoom: 9.5,
+          duration: 0.8,
+        });
+      }
     }
   }, [selectedProvince, geoJsonData, map]);
 
@@ -128,9 +146,10 @@ function MapController({
 }
 
 export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, className }: WeatherMapProps) {
-  const [geoJsonData, setGeoJsonData] = useState<any>(null);
+  const [geoJsonData, setGeoJsonData] = useState<GeoJsonData | null>(null);
   const [activeMetric, setActiveMetric] = useState<MetricType>("temp_c");
   const mapRef = useRef<LeafletMap | null>(null);
+  const geoJsonRef = useRef<L.GeoJSON | null>(null);
 
   // Fetch GeoJSON
   useEffect(() => {
@@ -161,7 +180,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
     if (!geoJsonData) return null;
     return {
       ...geoJsonData,
-      features: geoJsonData.features.map((feature: any) => {
+      features: geoJsonData.features.map((feature: GeoJsonFeature) => {
         const provinceName = (feature.properties.adm1_name || "").toLowerCase().trim();
         const weather = weatherByProvince.get(provinceName);
         return {
@@ -175,51 +194,106 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
     };
   }, [geoJsonData, weatherByProvince]);
 
-  // Store Leaflet layers for in-place style updates
-  const layerRefs = useRef<L.Layer[]>([]);
-
-  // Build tooltip HTML from enriched feature properties
-  function getTooltipContent(props: Record<string, any>): string {
+  // Build tooltip HTML from enriched feature properties based on the active metric
+  function getTooltipContent(props: WeatherProvinceProperties, metric: MetricType): string {
     const provinceName = props.adm1_name || props.name || "";
-    const tempVal = props.temp_c != null ? `${props.temp_c}°C` : "";
-    const condText = props.condition_text || "";
-    const humVal = props.humidity != null ? `${props.humidity}%` : "";
-    const windVal = props.wind_kph != null ? `${props.wind_kph} km/h` : "";
-    const precipVal = props.precip_mm != null ? `${props.precip_mm} mm` : "";
+    if (metric === "plain") {
+      return `<div class="p-2 text-sm"><strong>${provinceName}</strong></div>`;
+    }
 
-    const items = [tempVal, condText, humVal, windVal, precipVal].filter(Boolean);
-    const detail = items.length ? ` (${items.join(", ")})` : "";
+    let metricName = "";
+    let valueStr = "N/A";
+    let unit = "";
+    let color = "#94a3b8";
 
-    return provinceName + detail;
+    const val = props[metric] as number | null ?? null;
+    if (val !== null) {
+      valueStr = val.toString();
+    }
+
+    switch (metric) {
+      case "temp_c":
+        metricName = "Temperature";
+        unit = "°C";
+        color = getTempColor(val);
+        if (props.condition_text && val !== null) {
+          valueStr = `${val}${unit} (${props.condition_text})`;
+          unit = "";
+        }
+        break;
+      case "precip_mm":
+        metricName = "Rainfall";
+        unit = " mm";
+        color = getPrecipColor(val);
+        break;
+      case "wind_kph":
+        metricName = "Wind Speed";
+        unit = " km/h";
+        color = getWindColor(val);
+        break;
+      case "humidity":
+        metricName = "Humidity";
+        unit = "%";
+        color = getHumidityColor(val);
+        break;
+    }
+
+    const valueDisplay = val !== null ? `${valueStr}${unit}` : "No data";
+
+    return `
+      <div class="p-2 text-sm font-sans">
+        <strong>${provinceName}</strong><br/>
+        <span style="color: ${color}; font-weight: 600;">${metricName}: ${valueDisplay}</span>
+      </div>
+    `;
   }
 
   // Compute style from enriched feature properties
-  const getProvinceStyle = useCallback((props: Record<string, any> | undefined): PathOptions => {
+  const getProvinceStyle = useCallback((props: WeatherProvinceProperties | undefined): PathOptions => {
     if (!props) return { fillColor: "#94a3b8", fillOpacity: 0.65 };
 
     const provinceName = props.adm1_name as string;
     const metric = activeMetric;
-    const val = props[metric] as number | null ?? null;
+    const val = metric === "plain" ? null : (props[metric] as number | null ?? null);
     const fillColor = getMetricColor(val, metric);
     const isSelected = selectedProvince === provinceName;
 
     return {
       fillColor,
-      weight: isSelected ? 3.5 : 1.2,
+      weight: isSelected ? 3.5 : (metric === "plain" ? 1.5 : 1.2),
       opacity: 1,
-      color: isSelected ? "#0f172a" : "#e2e8f0",
-      fillOpacity: isSelected ? 0.85 : 0.65,
+      color: isSelected 
+        ? "#0f172a" 
+        : (metric === "plain" ? "#94a3b8" : "#e2e8f0"),
+      fillOpacity: metric === "plain"
+        ? (isSelected ? 0.4 : 0.15)
+        : (isSelected ? 0.85 : 0.65),
     };
   }, [activeMetric, selectedProvince]);
 
-  // In-place update of styles when metric/selection changes
+  // Ref to always get the latest style callback inside stable event listeners
+  const getProvinceStyleRef = useRef(getProvinceStyle);
   useEffect(() => {
-    layerRefs.current.forEach((layer: any) => {
-      if (layer.feature) {
-        layer.setStyle(getProvinceStyle(layer.feature.properties));
+    getProvinceStyleRef.current = getProvinceStyle;
+  }, [getProvinceStyle]);
+
+  const activeMetricRef = useRef(activeMetric);
+  useEffect(() => {
+    activeMetricRef.current = activeMetric;
+  }, [activeMetric]);
+
+  // In-place update of styles and tooltips when metric/selection changes
+  useEffect(() => {
+    geoJsonRef.current?.eachLayer((layer) => {
+      const featureLayer = layer as L.Path & { feature?: GeoJsonFeature };
+      if (featureLayer.feature) {
+        featureLayer.setStyle(getProvinceStyle(featureLayer.feature.properties));
+        if (typeof featureLayer.setTooltipContent === "function") {
+          featureLayer.setTooltipContent(getTooltipContent(featureLayer.feature.properties, activeMetric));
+        }
       }
     });
-  }, [getProvinceStyle]);
+  }, [getProvinceStyle, activeMetric]);
 
   // Static initial style (used during GeoJSON construction)
   const styleFeature = useCallback((feature?: GeoJsonFeature): PathOptions => {
@@ -229,9 +303,8 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
   // Stable callback — runs once at mount
   const onEachFeature = useCallback((feature: GeoJsonFeature, layer: L.Layer) => {
     const provinceName = feature.properties.adm1_name;
-    layerRefs.current.push(layer);
 
-    layer.bindTooltip(getTooltipContent(feature.properties), { sticky: true, direction: "top" });
+    layer.bindTooltip(getTooltipContent(feature.properties, activeMetricRef.current), { sticky: true, direction: "top" });
 
     layer.on({
       click: () => {
@@ -246,13 +319,13 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
         });
       },
       mouseout: (e: LeafletEvent) => {
-        const l = e.target as any;
+        const l = e.target as L.Path & { feature?: GeoJsonFeature };
         if (l.feature) {
-          l.setStyle(getProvinceStyle(l.feature.properties));
+          l.setStyle(getProvinceStyleRef.current(l.feature.properties));
         }
       },
     });
-  }, [getProvinceStyle]);
+  }, []);
 
   // Recenter map handler
   const handleRecenter = () => {
@@ -279,12 +352,12 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
         </div>
 
         {/* Dimension Overlay Selector */}
-        <div className="flex bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-0.5 rounded-xl self-start sm:self-center">
+        <div className="flex bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-0.5 rounded-xl self-start sm:self-center overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveMetric("temp_c")}
             title="Temperature overlay"
             className={cn(
-              "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
+              "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
               activeMetric === "temp_c" 
                 ? "bg-white dark:bg-slate-800 text-orange-600 dark:text-orange-400 shadow-sm" 
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
@@ -297,7 +370,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
             onClick={() => setActiveMetric("precip_mm")}
             title="Rainfall overlay"
             className={cn(
-              "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
+              "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
               activeMetric === "precip_mm" 
                 ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm" 
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
@@ -310,7 +383,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
             onClick={() => setActiveMetric("wind_kph")}
             title="Wind Speed overlay"
             className={cn(
-              "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
+              "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
               activeMetric === "wind_kph" 
                 ? "bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-400 shadow-sm" 
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
@@ -323,7 +396,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
             onClick={() => setActiveMetric("humidity")}
             title="Humidity overlay"
             className={cn(
-              "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer",
+              "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
               activeMetric === "humidity" 
                 ? "bg-white dark:bg-slate-800 text-teal-600 dark:text-teal-400 shadow-sm" 
                 : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
@@ -331,6 +404,19 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
           >
             <Droplets className="w-3.5 h-3.5" />
             <span className="hidden md:inline">Humidity</span>
+          </button>
+          <button
+            onClick={() => setActiveMetric("plain")}
+            title="Plain map boundaries"
+            className={cn(
+              "p-2 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
+              activeMetric === "plain" 
+                ? "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 shadow-sm" 
+                : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
+            )}
+          >
+            <MapIcon className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Plain</span>
           </button>
         </div>
       </div>
@@ -351,8 +437,9 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
             <MapController selectedProvince={selectedProvince} geoJsonData={geoJsonData} mapRef={mapRef} />
             {enrichedGeoJson && (
               <GeoJSON
+                ref={geoJsonRef}
                 data={enrichedGeoJson}
-                style={styleFeature as any}
+                style={styleFeature as StyleFunction}
                 onEachFeature={onEachFeature}
               />
             )}
@@ -378,6 +465,7 @@ export function WeatherMap({ weatherData, selectedProvince, onProvinceSelect, cl
 // ── Legend Sub-component ─────────────────────────────────────────────────
 
 function LegendOverlay({ metric }: { metric: MetricType }) {
+  if (metric === "plain") return null;
   const getLegendConfig = () => {
     switch (metric) {
       case "temp_c":
