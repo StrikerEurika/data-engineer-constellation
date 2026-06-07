@@ -1,6 +1,6 @@
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, Tooltip } from 'recharts';
 import { Download, MoreVertical, CloudRain } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { RainChanceData } from '@/types/weather';
 

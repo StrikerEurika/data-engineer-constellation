@@ -12,8 +12,8 @@ import {
   Table,
   Info
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
-import { Header } from "../layout/Header";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import { Header } from "../layout/header";
 import { fetchUV, fetchUVTrend } from "../services/weatherService";
 import { realTimeService } from "../services/realTimeService";
 import type { UVRecord } from "../types/weather";

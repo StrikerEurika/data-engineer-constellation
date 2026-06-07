@@ -1,8 +1,8 @@
 import type { AirQualityRecord } from '@/types/air-quality.types';
 import { getAqiInfo } from '@/utils/aqi-utils';
 import { X, MapPin, Clock } from 'lucide-react';
-import { AqiBadge } from './AqiBadge';
-import { Card, CardContent } from '@/components/ui/Card';
+import { AqiBadge } from './aqi-badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ProvinceDetailProps {
   record: AirQualityRecord;

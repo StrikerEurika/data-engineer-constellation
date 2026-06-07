@@ -6,14 +6,14 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from "@/components/ui/Table";
+} from "@/components/ui/table";
 import type {
   AirQualityRecord,
   SortField,
   SortDirection,
 } from "@/types/air-quality.types";
-import { SortIcon } from "./ProvinceTable/SortIcon";
-import { SearchBar } from "./ProvinceTable/SearchBar";
+import { SortIcon } from "./province-table/sort-icon";
+import { SearchBar } from "./province-table/search-bar";
 import { formatValue } from "@/utils/formatters";
 
 interface ProvinceTableProps {

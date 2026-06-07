@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, CloudSun, MapPin, ListFilter } from "lucide-react";
-import { Header } from "../layout/Header";
-import { MainWeatherCard } from "../components/weather/MainWeatherCard";
-import { WindCard } from "../components/weather/WindCard";
-import { WeatherMap } from "../components/weather/WeatherMap";
-import { RainChanceCard } from "../components/weather/RainChanceCard";
-import { ForecastSection } from "../components/weather/ForecastSection";
-import { Card } from "../components/ui/Card";
+import { Header } from "../layout/header";
+import { MainWeatherCard } from "../components/weather/main-weather-card";
+import { WindCard } from "../components/weather/wind-card";
+import { WeatherMap } from "../components/weather/weather-map";
+import { RainChanceCard } from "../components/weather/rain-chance-card";
+import { ForecastSection } from "../components/weather/forecast-section";
+import { Card } from "../components/ui/card";
 import { cn } from "../lib/utils";
 import {
   fetchWeather,

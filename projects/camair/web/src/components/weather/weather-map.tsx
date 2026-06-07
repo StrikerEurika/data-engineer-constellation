@@ -4,7 +4,7 @@ import type { Map as LeafletMap, LeafletEvent, PathOptions, StyleFunction } from
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Thermometer, CloudRain, Wind, Droplets, Target, Map as MapIcon } from "lucide-react";
-import { Card } from "@/components/ui/Card";
+import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { WeatherRecord } from "@/types/weather";
 import cambodiaGeoJsonUrl from "@/assets/geoData/cambodia-provinces.geojson?url";

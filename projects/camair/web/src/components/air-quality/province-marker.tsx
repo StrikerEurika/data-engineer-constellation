@@ -1,5 +1,5 @@
 import { CircleMarker, Popup } from 'react-leaflet';
-import { AqiBadge } from './AqiBadge';
+import { AqiBadge } from './aqi-badge';
 import { getAqiInfo } from '@/utils/aqi-utils';
 import type { AirQualityRecord } from '@/types/air-quality.types';
 

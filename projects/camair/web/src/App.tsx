@@ -1,14 +1,14 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages/Home";
-import OverviewDashboard from "./pages/OverviewDashboard";
-import WeatherDashboard from "./pages/WeatherDashboard";
-import AirQuality from "./pages/AirQuality";
-import UvDashboard from "./pages/UvDashboard";
-import Forecast from "./pages/Forecast";
-import Tasks from "./pages/Tasks";
-import Calendar from "./pages/Calendar";
-import Settings from "./pages/Settings";
-import DashboardLayout from "./layout/DashboardLayout";
+import Home from "./pages/home";
+import OverviewDashboard from "./pages/overview-dashboard";
+import WeatherDashboard from "./pages/weather-dashboard";
+import AirQuality from "./pages/air-quality";
+import UvDashboard from "./pages/uv-dashboard";
+import Forecast from "./pages/forecast";
+import Tasks from "./pages/tasks";
+import Calendar from "./pages/calendar";
+import Settings from "./pages/settings";
+import DashboardLayout from "./layout/dashboard-layout";
 
 function App() {
   return (

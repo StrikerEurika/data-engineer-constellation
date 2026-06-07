@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Cloud, Layers } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { fetchAirQuality } from "@/services/airQualityService";
 import { fetchUV, fetchWeather } from "@/services/weatherService";
 import { realTimeService } from "@/services/realTimeService";
@@ -19,7 +19,7 @@ import {
   MapSearchBar,
   ProvinceDetailsPanel,
 } from "@/components/air-quality";
-import { Header } from "@/layout/Header";
+import { Header } from "@/layout/header";
 import { Button } from "@/components/ui/button";
 import type { Map as LeafletMap } from "leaflet";
 

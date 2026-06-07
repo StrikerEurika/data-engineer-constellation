@@ -10,7 +10,7 @@ import {
   Activity,
   Map as MapIcon
 } from "lucide-react";
-import { Header } from "@/layout/Header";
+import { Header } from "@/layout/header";
 import { useState, useEffect } from "react";
 import { fetchAirQuality } from "@/services/airQualityService";
 import { fetchWeather, fetchUV } from "@/services/weatherService";

@@ -15,8 +15,8 @@ import {
   Heart,
   Thermometer
 } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/Card";
-import { Header } from "../layout/Header";
+import { Card, CardHeader, CardTitle, CardContent } from "../components/ui/card";
+import { Header } from "../layout/header";
 import {
   fetchAirQualityTrend,
   fetchUV,

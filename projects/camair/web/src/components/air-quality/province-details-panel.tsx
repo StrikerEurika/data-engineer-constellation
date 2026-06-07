@@ -1,5 +1,5 @@
 import { Target, Activity, Cloud, Sun, Droplets, Wind } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/Card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { AqiGauge, PollutantChart } from "@/components/air-quality";
 import type { AirQualityRecord } from "@/types/air-quality.types";
 import type { UVRecord, WeatherRecord } from "@/types/weather";

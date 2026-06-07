@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { AirQualityRecord } from "@/types/air-quality.types";
-import { AqiBadge } from "@/components/air-quality/AqiBadge";
+import { AqiBadge } from "@/components/air-quality/aqi-badge";
 import { formatToUTC7Intl } from "@/utils/time";
 
 export function formatValue(

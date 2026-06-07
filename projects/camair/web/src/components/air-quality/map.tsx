@@ -5,7 +5,7 @@ import type { Map as LeafletMap } from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { AirQualityRecord, PollutantType } from "@/types/air-quality.types";
 import type { UVRecord } from "@/types/weather";
-import { ProvinceMapOverlay } from "@/components/map/ProvinceMapOverlay";
+import { ProvinceMapOverlay } from "@/components/map/province-map-overlay";
 import cambodiaGeoJsonUrl from "@/assets/geoData/cambodia-provinces.geojson?url";
 
 function MapInitHandler({

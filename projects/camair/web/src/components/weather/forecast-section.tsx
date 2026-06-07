@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Plus, Download, MoreVertical, Calendar } from 'lucide-react';
-import { Card } from '@/components/ui/Card';
+import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { WeatherCity, WeatherForecast } from '@/types/weather';
 

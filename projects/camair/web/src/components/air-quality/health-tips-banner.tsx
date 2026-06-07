@@ -1,5 +1,5 @@
 import { Cloud, X } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface HealthTipsBannerProps {
   stats: {
