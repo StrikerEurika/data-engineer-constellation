@@ -60,9 +60,22 @@ parsed_df = raw_kafka_df.selectExpr("CAST(value AS STRING) as json_string") \
     .select(from_json(col("json_string"), air_quality_schema).alias("data")) \
     .select("data.*")
 
+# Add name mapping to match our 'provinces' table
+# The API uses slightly different names for some provinces.
+from pyspark.sql.functions import when
+mapped_df = parsed_df.withColumn(
+    "name",
+    when(col("name") == "Sihanoukville", "Preah Sihanouk")
+    .when(col("name") == "Siem Reap", "Siemreap")
+    .when(col("name") == "Strung Treng", "Stung Treng")
+    .when(col("name") == "Ratanakiri", "Ratanak Kiri")
+    .when(col("name") == "Mondulkiri", "Mondul Kiri")
+    .otherwise(col("name"))
+)
+
 # Let's do a little bit of cleaning: convert the string timestamp into a real Spark timestamp
 # We use ISO 8601 format for robustness
-cleaned_df = parsed_df.withColumn(
+cleaned_df = mapped_df.withColumn(
     "created_at_ts", to_timestamp(col("created_at"), "yyyy-MM-dd'T'HH:mm:ss.SSSSSSXXX"))
 
 # 5. Write the Output (The "Sink")
