@@ -1,134 +1,74 @@
-# Presentation Guide: CamAir - Cambodia Environmental Monitoring Platform
+Project Description: CamAir - Cambodia Environmental Monitoring System
 
-This document serves as a comprehensive guide for your final project presentation to your Data Engineering lecturer. It covers the architecture, data flow, technical stack, and engineering decisions.
+  This document serves as the official project description for the CamAir data engineering project, designed for
+  a final project presentation.
 
----
+  ---
 
-## 1. Project Title & Vision
-**Title**: CamAir: Real-Time Environmental Intelligence for Cambodia  
-**Vision**: A modern, scalable data platform that provides citizens and policymakers with live Air Quality (AQI), Weather, and UV index insights across all 25 provinces of Cambodia.
+  1. Project Overview
+  CamAir is a robust, end-to-end data engineering platform designed to monitor environmental conditions across   
+  Cambodia in real-time. The system ingests, processes, and visualizes Air Quality Index (AQI), Weather, and UV  
+  Index data for all 25 provinces, providing citizens and stakeholders with live, actionable insights into their 
+  environment.
 
----
+  2. Problem Statement & Motivation
+  Cambodia's rapid urbanization and climate vulnerability necessitate accessible, real-time environmental data.  
+  Previously, this data was scattered or difficult to consume programmatically. CamAir addresses this by:        
+   * Centralizing Data: Consolidating diverse environmental metrics from public APIs into a single source of     
+     truth.
+   * Real-Time Processing: Moving beyond static snapshots to a streaming architecture that reflects current      
+     conditions.
+   * Geospatial Context: Leveraging spatial databases to provide province-specific insights and proximity-based  
+     queries.
 
-## 2. System Architecture
-The system follows a **lambda-style architecture** principles, combining real-time streaming with long-term analytical storage.
+  3. Technical Architecture
+  The project employs a modern "Medallion-inspired" architecture, utilizing a high-performance tech stack:
 
-### 2.1 High-Level Architecture Diagram
-```mermaid
-graph TD
-    subgraph "External Sources"
-        MEF[Cambodia MEF APIs]
-    end
+   * Ingestion Layer: Apache Airflow orchestrates a Python-based ingestor that polls MEF Cambodia APIs every 15
+     minutes, pushing raw JSON payloads into Apache Kafka.
+   * Processing Layer: Apache Spark Structured Streaming (PySpark) consumes Kafka topics. It performs data
+     cleaning, schema validation, and enrichment (e.g., calculating AQI levels and attaching timestamps).
+   * Storage Layer: A PostgreSQL database enhanced with PostGIS stores the processed data and high-resolution
+     province boundaries (GeoJSON).
+   * Serving Layer: A FastAPI backend provides RESTful endpoints and uses WebSockets for pushing live updates to
+     clients without page refreshes.
+   * Visualization Layer: A React (TypeScript) dashboard featuring interactive maps (Leaflet) and trend charts
+     (Recharts).
 
-    subgraph "Ingestion Layer"
-        AF[Apache Airflow]
-        AF -->|Triggers| EXT[Python Extractor]
-    end
+  4. The Data Engineering Pipeline (The Heart)
+  The core of CamAir is its triple-stream pipeline:
+   1. Extraction: Continuous polling of REST APIs.
+   2. Buffering: Kafka acts as a message broker, ensuring system resilience and decoupling ingestion from        
+      processing.
+   3. Transformation: Spark streaming jobs handle the "heavy lifting":
+       * Parsing nested JSON.
+       * Standardizing units and data types.
+       * Deduplication and windowing for time-series consistency.
+   4. Loading: Sinking data into both relational tables (PostgreSQL) for operational use and Parquet files for   
+      long-term analytical storage.
 
-    subgraph "Streaming Layer (Broker)"
-        K[Apache Kafka]
-        EXT -->|Publish Raw JSON| K
-    end
+  5. Geospatial & Real-Time Innovation
+   * Spatial Intelligence: By using PostGIS, CamAir allows users to query data based on location, such as "Find
+     the AQI of provinces within 50km of Phnom Penh."
+   * Live Synchronization: The integration of a database poller and WebSockets ensures that as soon as Spark
+     commits a new record to the database, the frontend dashboard updates globally across all connected users
+     within seconds.
 
-    subgraph "Processing Layer (Compute)"
-        S[Apache Spark Streaming]
-        K -->|Consume Topics| S
-        S -->|Data Cleaning & Enrichment| S
-    end
+  6. Tech Stack Summary
+  ┌───────────────────┬─────────────────────────────────┐
+  │ Component         │ Technology                      │
+  ├───────────────────┼─────────────────────────────────┤
+  │ Orchestration     │ Apache Airflow                  │
+  │ Streaming/Buffer  │ Apache Kafka                    │
+  │ Stream Processing │ Apache Spark (PySpark)          │
+  │ Database          │ PostgreSQL + PostGIS            │
+  │ Backend API       │ FastAPI (Python)                │
+  │ Frontend UI       │ React, TypeScript, Tailwind CSS │
+  │ Infrastructure    │ Docker Compose                  │
+  └───────────────────┴─────────────────────────────────┘
 
-    subgraph "Storage Layer"
-        PG[(PostgreSQL + PostGIS)]
-        PQ[[Parquet Data Lake]]
-        S -->|Upsert Real-time| PG
-        S -->|Append Historical| PQ
-    end
-
-    subgraph "Serving Layer"
-        API[FastAPI Backend]
-        WS[WebSocket Broadcaster]
-        PG --> API
-        API --> WS
-    end
-
-    subgraph "Presentation Layer"
-        WEB[React Dashboard]
-        WS -->|Live Updates| WEB
-        API -->|REST API| WEB
-    end
-
-    MEF -.-> AF
-```
-
----
-
-## 3. The Data Pipeline (ETL/ELT)
-As a Data Engineer, the focus is on the robustness and reliability of the data flow.
-
-### Phase 1: Ingestion (The Extractor)
-- **Tool**: Apache Airflow.
-- **Logic**: Periodically (every 15-60 mins) polls three REST endpoints (AQI, Weather, UV).
-- **Decoupling**: Instead of writing directly to the database, the extractor pushes raw JSON to **Kafka**. This ensures that if the database is down, data isn't lost.
-
-### Phase 2: Streaming Broker (Kafka)
-- **Topics**: `raw_air_quality`, `raw_weather`, `raw_uv`.
-- **Role**: Provides high-throughput, fault-tolerant message queuing. It allows the processing layer to scale independently of the ingestion layer.
-
-### Phase 3: Processing (Spark Structured Streaming)
-- **Logic**: 
-    - Consumes raw Kafka messages.
-    - Parses JSON schemas into typed DataFrames.
-    - **Data Enrichment**: Calculates timestamps, cleans null values, and maps condition codes to icons.
-    - **Sinks**: 
-        - **PostgreSQL**: Stores the *current state* for the live dashboard.
-        - **Parquet**: Stores the *event history* on disk for future Big Data analysis (Trend prediction/Machine Learning).
-
----
-
-## 4. Data Modeling & Storage
-
-### 4.1 Relational Database (PostgreSQL)
-We use a relational model to serve the API efficiently.
-- **Key Tables**: `processed_air_quality`, `processed_weather`, `processed_uv_index`.
-- **Optimization**: Uses `DISTINCT ON (name)` logic in queries to always fetch the latest record per province.
-
-### 4.2 Geospatial Power (PostGIS)
-- **Spatial Data**: Cambodia province boundaries are stored as `GEOMETRY` objects.
-- **Capabilities**: Enables spatial queries like "Find air quality within 50km of Phnom Penh" or "Calculate distance between centroids."
-- **Index**: GIST spatial indexing for sub-millisecond query performance.
-
----
-
-## 5. Technical Highlights (For the Lecturer)
-
-When presenting, emphasize these "Data Engineering" specific points:
-
-1.  **Fault Tolerance**: Using Kafka as a buffer prevents data loss during API spikes or database maintenance.
-2.  **Scalability**: Apache Spark allows us to process data for 25 provinces or 25,000 sensors with the same code logic.
-3.  **Real-Time Synchronization**: The integration of **WebSockets** with the FastAPI backend means the frontend dashboard updates instantly without the user needing to refresh.
-4.  **Data Lake Readiness**: By sinking data to Parquet format, the system is ready for integration with modern Data Lakehouses (like Databricks or Snowflake) for historical trend analysis.
-5.  **Schema Enforcement**: Spark ensures that only valid, cleaned data enters the production database, preventing "Garbage In, Garbage Out."
-
----
-
-## 6. Tech Stack Summary
-
-| Layer | Technology |
-| :--- | :--- |
-| **Orchestration** | Apache Airflow |
-| **Streaming** | Apache Kafka |
-| **Compute** | Apache Spark (PySpark) |
-| **Database** | PostgreSQL + PostGIS |
-| **API** | FastAPI (Python) |
-| **Frontend** | React + TypeScript + Leaflet |
-| **Infrastructure** | Docker & Docker Compose |
-
----
-
-## 7. Future Roadmap
-- **Predictive Analytics**: Use the Parquet historical data to build an LSTM model for AQI forecasting.
-- **Alerting System**: Trigger Telegram/Email alerts when AQI reaches "Unhealthy" levels.
-- **Mobile App**: Expand the React frontend into a Progressive Web App (PWA).
-
----
-
-*This guide was prepared by Gemini CLI to assist in the presentation of the CamAir Data Engineering project.*
+  7. Future Roadmap
+   * Predictive Analytics: Implementing ML models on the historical Parquet data to forecast AQI trends.
+   * Public Alerting: Integrating a notification service (Telegram/Email) for health alerts when AQI exceeds     
+     "Unhealthy" thresholds.
+   * Expanded Data Sources: Integrating satellite imagery and additional IoT sensor networks.
